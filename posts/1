@@ -71,7 +71,7 @@ href='https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objec
 expects a <code>/</code> followed by either a number or an empty string,
 capturing the string following the <code>/</code> into <code>match[1]</code>.
 
-<pre><code>var listener = function(req, res) {
+<pre><code>function listener(req, res) {
     var match = req.url.match(/^\/(\d+|)$/);
 </code></pre>
 
@@ -92,8 +92,8 @@ or the latest post (if it wasn't).  Otherwise, we report an error.
         res.write(preamble);
         res.write(posts[id] || 'Post not found');
         res.end(postscript(id));
-    };
-};
+    }
+}
 </code></pre>
 
 <p>The preamble will eventually consist of <code>&lt;head&gt;</code> part of

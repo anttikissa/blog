@@ -17,7 +17,7 @@ postIds.forEach(function(id) {
 	posts[id] = fs.readFileSync(__dirname + "/../posts/" + id, "utf-8");
 });
 
-var listener = function(req, res) {
+function listener(req, res) {
 	var match = req.url.match(/^\/(\d+|)$/);
 	if (match) {
 		serve(match[1] || latestPostId);
@@ -31,8 +31,8 @@ var listener = function(req, res) {
 		res.write(preamble);
 		res.write(posts[id] || 'Post not found');
 		res.end(postscript(id));
-	};
-};
+	}
+}
 
 try {
 	var preamble = fs.readFileSync('preamble.html');
