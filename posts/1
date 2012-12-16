@@ -134,7 +134,7 @@ server.listen(3000);</code></pre>
 
 <p>Here's how it looks like &ndash; not very pretty, but it's a start.
 
-<img src='http://cl.ly/image/15070M1B3n1t/Screen%20Shot%202012-12-16%20at%202.58.41%20PM.png'>
+<img alt='' src='http://cl.ly/image/15070M1B3n1t/Screen%20Shot%202012-12-16%20at%202.58.41%20PM.png'>
 
 <p>Now, how could we make it better?
 
