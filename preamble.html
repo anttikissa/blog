@@ -13,32 +13,63 @@
 	body {
 		line-height: 22px;
 		width: 550px;
-		margin: 0 22px;
+		margin: 0 auto;
 	}
-	h1 {
+	code {
+		font-family: 'Courier New';
+		font-size: 15px;
+	}
+	h1, h2, h3 {
 		font-size: 16px;
 	}
 	h1, p, ul, ol, pre {
 		margin: 22px 0;
 	}
-	ol {
+	blockquote {
+		margin: 0 22px;
+	}
+	ul, ol {
 		padding: 0 44px;
 	}
-	pre, code {
-		background-color: #f3f3f3;
-	}
-	code {
-		font-family: 'Courier New';
-		font-size: 15px;
-		line-height: 18px;
-		color: #336677;
-		display: inline-block;
-		border-top: 2px solid #f3f3f3;
-		padding: 0 2px;
-	}
-	pre > code {
-		line-height: 22px;
+
+	code, pre {
+		background: #f3f3f3;
 	}
 
+	pre {
+		padding: 1px 2px 0 2px;
+		margin-top: -2px;
+	}
+
+	code {
+		padding: 0 2px;
+		line-height: 18px;
+		border-top: 3px solid #f3f3f3;
+		color: #456;
+		display: inline-block;
+	}
+
+	pre > code {
+		line-height: 22px;
+		border-top: none;
+	}
+
+	a {
+		color: #25b825;
+		text-decoration: none;
+		border-bottom: 1px solid #40d240;
+	}
+
+	a:hover {
+		background: #efe;
+		outline: 2px solid #efe;
+	}
+
+	a:active {
+		background: #4e4;
+		color: #efe;
+		border: 1px solid #4e4;
+		outline: none;
+	}
 </style>
 

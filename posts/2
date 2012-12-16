@@ -4,7 +4,7 @@
 shortcomings.
 
 <ol>
-<li>When writing a post (and when changing the server!), you don't see the result instantaneously;
+<li>When writing a post (and when making changes to the server itself), you don't see the result instantaneously;
 <li>there is no styling at all;
 <li>the metadata is lacking (names and dates are missing);
 <li>authoring in HTML is tedious;
@@ -18,28 +18,32 @@ during development.  This goes to the end of <code>server/run.js</code>:
 <pre><code>setTimeout(function() { process.exit(0); }, 1000);
 </code></pre>
 
-To run the server, we now have to do:
+<p>To run the server, we now have to do:
 <pre><code>% while ./server/run.js; do; done</code></pre>
 
 which is pretty much how you would run a server in production anyway.
 
-<p>Then let's fix (2) by introducing some CSS in the preamble.
+<p>Then let's fix (2) by introducing some stylesheets.
 
-<p>We don't even have to touch the blog engine itself for this one; let's start writing <code>preamble.html</code>.  We start with the usual HTML5 boilerplate.
+<p>We don't even have to touch the blog engine itself for this one; let's start
+writing <code>preamble.html</code>.  We start with the usual HTML5 boilerplate.
+(Note that we don't need to explicitly say <code>&lt;head&gt;</code> or <code>&lt;body&gt;</code> in
+HTML5, so we won't.)
 
 <pre><code>&lt;!doctype html&gt;
 &lt;meta charset='utf-8'&gt;
 &lt;title&gt;Blog&lt;/title&gt;
 </code></pre>
 
-<p>We embed the <code>&lt;style&gt;</code> tag, for now, to each served
-document &ndash; not ideal for caching purposes, but let's live with that a
-while.
+<p>We embed the <code>&lt;style&gt;</code> tag, for now, to each served document
+&ndash; perhaps not ideal for production use, but more than enough for now.
 
-<p>To keep it simple, let's restrict ourselves to universally available fonts
-and keep it as minimal as possible.
+<p>To keep it simple, let's restrict ourselves to universally available fonts.
+We won't go too fancy with the design, either, but that doesn't prevent us from
+paying some attention to the details.
 
-<p>Let's start with a slightly more elegant font, Palatino, and make it slightly off-black on slightly off-white:
+<p>Let's start with a more readable font, Palatino, and make it slightly
+off-black on slightly off-white:
 
 <pre><code>&lt;style&gt;
     body {
@@ -51,16 +55,112 @@ and keep it as minimal as possible.
 
 <p>Then get rid of some of the default margins:
 
-<pre><code>
-    body, div, p, ol, ul, li, h1, h2, h3 {
+<pre><code>    body, div, p, ol, ul, li, h1, h2, h3 {
         margin: 0;
     }
-&lt;/style&gt;
 </code></pre>
 
 <p>After a while of fiddling in Fireworks, we arrive at suitable font selection
-(16px Palatino combined with 15px Courier New on a 22px baseline grid) and content
-width of 550px, which fits about 70 characters per line on average.
+(16px Palatino combined with 15px Courier New on a 22px baseline grid) and
+content width of 550px, which makes running text about 70&ndash;80 characters
+per line and code listings exactly 60 characters wide.
 
-<p>This gives us a nice and readable, if not exceedingly original, layout.
+<p>This gives us a nice and readable, if not exceedingly original, starting point.
+<p>We don't have to specify 16 pixels for other elements than headings, since it's the
+default size.
 
+<pre><code>    body {
+        line-height: 22px;
+        width: 550px;
+        margin: 0 auto;
+    }
+    code {
+        font-family: 'Courier New';
+        font-size: 15px;
+    }
+    h1, h2, h3 {
+        font-size: 16px;
+    }
+</code></pre>
+<p>We derive the margins for the common elements from the baseline measure.  Lists and blockquotes demand some indentation; we use multiples of the same measure.
+<pre><code>    h1, p, ul, ol, pre {
+        margin: 22px 0;
+    }
+    blockquote {
+        margin: 22px 44px;
+    }
+    ol, ul {
+        padding: 0 44px;
+    }
+</code></pre>
+
+<p><code>&lt;code&gt;</code> elements require some work in order to look just
+right.  We'll want to let them stand out a bit from the other text by giving
+them a slightly grey background.  <code>&lt;pre&gt;</code> elements are used to
+contain code longer code listings, so they get the same treatment, and some additional side padding.
+
+<pre><code>    code, pre {
+        background: #f3f3f3;
+    }
+</code></pre>
+
+<p>This alone would be just fine, but the inline <code>&lt;code&gt;</code> elements
+still need some extra padding.  We also set their <code>line-height</code> to
+just 18px, since that helps some browsers keep the baseline grid in sync (and
+reduces the padding below the text).  The <code>border-top</code> style is used
+to add a few pixels of extra padding above the element (except inside
+<code>&lt;pre&gt;</code>).  
+
+<p>The text color is tinted slightly towards blue so as to prevent it from
+looking totally dead; and it must be made <code>inline-block</code> so code
+listings with too wide lines, such as the ones you saw in the <a href="/1">first post</a> won't look wrong.
+
+<p>To make it look <em>just</em> right, we also need to tweak the position of
+<code>&lt;pre&gt;</code>'s contents using <code>position: relative</code>, and
+change the relative position of <code>&lt;pre&gt;</code> by a pixel or two 
+using some negative margin.  There.  (This is starting to get a bit too obsessive, so
+we'll stop this madness right here.)
+
+<pre><code>    pre {
+        padding: 1px 2px 0 2px;
+        margin-top: -2px;
+    }
+
+    code {
+        padding: 0 2px;
+        line-height: 18px;
+        border-top: 3px solid #f3f3f3;
+        color: #456;
+        display: inline-block;
+    }
+
+    pre > code {
+        line-height: 22px;
+        border-top: none;
+    }
+</code></pre>
+<p>Finally, let's pick a color for the links.  Say, a nice lively green.
+<pre><code>    a {
+        color: #22b422;
+        text-decoration: none;
+        border-bottom: 1px solid #44d644;
+    }
+
+    a:hover {
+        background: #efe;
+        outline: 2px solid #efe;
+    }
+
+    a:active {
+        background: #4e4;
+        color: #efe;
+        border: 1px solid #4e4;
+        outline: none;
+    }
+&lt;/style&gt;
+</code></pre>
+<p>There &ndash; looks better now.
+
+<img src='http://f.cl.ly/items/2d3v2V471T352V3E260p/Screen%20Shot%202012-12-16%20at%2010.05.12%20PM.png'>
+
+<p>But how can we improve upon this next?
