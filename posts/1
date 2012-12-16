@@ -1,0 +1,133 @@
+<h1>Hello World</h1>
+
+<p>So, let's make a blog from scratch in Node.js.
+
+<p>We start with the simplest possible solution.  We serve a single post at a
+time.  Posts are authored in HTML with a text editor and put in the directory
+<code>posts/</code>.  The filename of a post is also its id, which is a natural
+number; this post is the first one and has the id <code>1</code>.
+
+<p>At <code>http://localhost:3000/</code>, the server gives you the latest post.
+You can view individual posts at <code>http://localhost:3000/&lt;id&gt;</code>.
+
+<p>The server will reside in <code>server/run.js</code>. We'll make it a runnable
+script by making it executable and starting it with:
+
+<pre><code>#!/usr/bin/env node
+</code></pre>
+
+<p>Now to start the server, we'll just say <code>server/run.js</code>.
+
+<p>We need two modules: <code>http</code> for serving the posts; and
+<code>fs</code> for reading the posts from disk.
+
+<pre><code>var http = require('http');
+var fs = require('fs');
+</code></pre>
+
+<p>For simplicity, let's read all the posts into memory at start.
+
+<p>We'll use the synchronized versions of <code>fs.readdir</code> (and, later,
+<code>fs.readFile</code>) now that we're just starting up.
+
+<pre><code>var filenames = fs.readdirSync(__dirname + "/../posts");</code></pre>
+
+<p>We only accept files that look like post ids, i.e. numbers.
+<pre><code>var postIds = filenames.filter(function(filename) {
+    return filename.match(/^\d+$/);
+});
+</code></pre>
+
+<p>We then sort the filenames in order to find out the latest one.  Custom sort
+function must be used, since JavaScript sorts lexicographically by default.
+(In lexicographical order, <code>11</code> comes before <code>2</code>. We don't
+want that.)
+
+<pre><code>postIds.sort(function(a, b) { return Number(a) - Number(b); });
+var latestPostId = postIds[postIds.length - 1];
+</code></pre>
+
+<p>Post contents are stored in an object whose keys are the post ids.  We use <code>Object.create(null)</code> to create an object with a
+null prototype instead of <code>{}</code> to avoid hypothetical problems with posts whose id is e.g. <code>hasOwnProperty</code>. (Read all about it at <a
+href="http://www.devthought.com/2012/01/18/an-object-is-not-a-hash/">"An object
+is not a hash"</a>.)
+
+<pre><code>var posts = Object.create(null);
+</code></pre>
+
+<p>For each post, we simply read the file into <code>posts</code>.
+<pre><code>postIds.forEach(function(id) {
+    posts[id] = fs.readFileSync(__dirname + "/../posts/" + id, "utf-8");
+});
+</code></pre>
+
+<p>Our server is a function called <code>listener</code> that takes a <a
+href='http://nodejs.org/api/http.html#http_class_http_serverrequest'>http.ServerRequest</a>
+and a <a
+href='http://nodejs.org/api/http.html#http_class_http_serverresponse'>http.ServerResponse</a>.
+
+<p>It first checks whether we have valid URL.  The following <a
+href='https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/RegExp'>RegExp</a>
+expects a <code>/</code> followed by either a number or an empty string,
+capturing the string following the <code>/</code> into <code>match[1]</code>.
+
+<pre><code>var listener = function(req, res) {
+    var match = req.url.match(/^\/(\d+|)$/);
+</code></pre>
+
+<p>If the match succeeds, we serve the post (if a post id was specified)
+or the latest post (if it wasn't).  Otherwise, we report an error.
+
+<pre><code>    if (match) {
+        serve(match[1] || latestPostId);
+    } else {
+        res.writeHead(404);
+        res.end("Not found");
+    }
+</code></pre>
+
+<p>The <code>serve</code> function first writes a preamble, then the post itself (if found), and finally a postscript.
+
+<pre><code>    function serve(id) {
+        res.write(preamble);
+        res.write(posts[id] || 'Post not found');
+        res.end(postscript(id));
+    };
+};
+</code></pre>
+
+<p>The preamble will eventually consist of <code>&lt;head&gt;</code> part of
+the HTML document: scripts, styles, etc.  It is easiest to put in a separate
+file, which is loaded at startup.  At first, in our exhilarated anticipation
+towards getting the thing up and running, we want to tolerate the absence of
+this file.  Even so, let's produce standards-compliant HTML.
+
+<pre><code>try {
+    var preamble = fs.readFileSync('preamble.html');
+} catch (e) { preamble = '&lt;!doctype html&gt;\n'; }
+</code></pre>
+
+<p>To facilitate navigation between the posts, the <code>postscript</code>
+function produces links for going to the previous and next post.  For now, we
+assume that there are no holes in the post id space.
+
+<pre><code>function postscript(id) {
+    result = ""; 
+    if (Number(id) &gt; 1)
+        result += "&lt;p&gt;&lt;a href='/" + (Number(id)-1) + "'&gt;Previous post&lt;/a&gt;";
+    if (Number(id) &lt; Number(latestPostId))
+        result += "&lt;p&gt;&lt;a href='/" + (Number(id)+1) + "'&gt;Next post&lt;/a&gt;";
+    return result;
+}
+</code></pre>
+
+<p>After that we can create the server and start listening:
+
+<pre><code>var server = http.createServer(listener);
+
+server.listen(3000);</code></pre>
+
+<p>Voil&agrave; &ndash; a working node.js blog engine in 52 lines and 1286 bytes of code. (The code is at <a href='http://github.com/anttisykari/blog'>GitHub</a>.)
+
+<p><em>But how could we make it better?</em>
+
