@@ -1,4 +1,4 @@
-blog
-====
+# blog
 
-Simple blog from scratch with node.js 
+Simple blog from scratch with node.js.
+
