@@ -1,0 +1,66 @@
+<h1>Next steps</h1>
+
+<p>Now it's a good time to take a look at the blog and observe some of its
+shortcomings.
+
+<ol>
+<li>When writing a post (and when changing the server!), you don't see the result instantaneously;
+<li>there is no styling at all;
+<li>the metadata is lacking (names and dates are missing);
+<li>authoring in HTML is tedious;
+<li>and it's not possible to insert other than text content (without resorting to third-party services).
+</ol>
+
+<p>For (1), let's do a quick and dirty fix and restart the server
+every second.  This will give us some downtime, but it's more than acceptable
+during development.  This goes to the end of <code>server/run.js</code>:
+
+<pre><code>setTimeout(function() { process.exit(0); }, 1000);
+</code></pre>
+
+To run the server, we now have to do:
+<pre><code>% while ./server/run.js; do; done</code></pre>
+
+which is pretty much how you would run a server in production anyway.
+
+<p>Then let's fix (2) by introducing some CSS in the preamble.
+
+<p>We don't even have to touch the blog engine itself for this one; let's start writing <code>preamble.html</code>.  We start with the usual HTML5 boilerplate.
+
+<pre><code>&lt;!doctype html&gt;
+&lt;meta charset='utf-8'&gt;
+&lt;title&gt;Blog&lt;/title&gt;
+</code></pre>
+
+<p>We embed the <code>&lt;style&gt;</code> tag, for now, to each served
+document &ndash; not ideal for caching purposes, but let's live with that a
+while.
+
+<p>To keep it simple, let's restrict ourselves to universally available fonts
+and keep it as minimal as possible.
+
+<p>Let's start with a slightly more elegant font, Palatino, and make it slightly off-black on slightly off-white:
+
+<pre><code>&lt;style&gt;
+    body {
+        color: #282828;
+        background: #fdfdfd;
+        font-family: Palatino, "Palatino Linotype";
+    }
+</code></pre>
+
+<p>Then get rid of some of the default margins:
+
+<pre><code>
+    body, div, p, ol, ul, li, h1, h2, h3 {
+        margin: 0;
+    }
+&lt;/style&gt;
+</code></pre>
+
+<p>After a while of fiddling in Fireworks, we arrive at suitable font selection
+(16px Palatino combined with 15px Courier New on a 22px baseline grid) and content
+width of 550px, which fits about 70 characters per line on average.
+
+<p>This gives us a nice and readable, if not exceedingly original, layout.
+

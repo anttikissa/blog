@@ -51,3 +51,6 @@ function postscript(id) {
 
 var server = http.createServer(listener);
 server.listen(3000);
+
+setTimeout(function() { process.exit(0); }, 1000);
+
