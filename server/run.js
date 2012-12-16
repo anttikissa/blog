@@ -20,6 +20,7 @@ postIds.forEach(function(id) {
 function listener(req, res) {
 	var match = req.url.match(/^\/(\d+|)$/);
 	if (match) {
+		res.writeHead(200, { 'Content-Type': 'text/html' });
 		serve(match[1] || latestPostId);
 	} else {
 		res.writeHead(404);
@@ -27,7 +28,6 @@ function listener(req, res) {
 	}
 
 	function serve(id) {
-		res.writeHead(200, { 'Content-Type': 'text/html' });
 		res.write(preamble);
 		res.write(posts[id] || 'Post not found');
 		res.end(postscript(id));

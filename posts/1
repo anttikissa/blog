@@ -79,6 +79,7 @@ capturing the string following the <code>/</code> into <code>match[1]</code>.
 or the latest post (if it wasn't).  Otherwise, we report an error.
 
 <pre><code>    if (match) {
+        res.writeHead(200, { 'Content-Type': 'text/html' }); 
         serve(match[1] || latestPostId);
     } else {
         res.writeHead(404);
