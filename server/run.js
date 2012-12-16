@@ -36,10 +36,12 @@ function listener(req, res) {
 
 try {
 	var preamble = fs.readFileSync('preamble.html');
-} catch (e) { preamble = '<!doctype html>\n<title>Blog</title>\n'; }
+} catch (e) {
+	preamble = '<!doctype html>\n<title>Blog</title>\n';
+}
 
 function postscript(id) {
-	result = "";
+	var result = "";
 	if (Number(id) > 1)
 		result += "<p><a href='/" + (Number(id)-1) + "'>Previous post</a>";
 	if (Number(id) < Number(latestPostId))
@@ -48,5 +50,4 @@ function postscript(id) {
 }
 
 var server = http.createServer(listener);
-
 server.listen(3000);

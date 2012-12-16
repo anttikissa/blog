@@ -100,20 +100,23 @@ or the latest post (if it wasn't).  Otherwise, we report an error.
 <p>The preamble will eventually consist of <code>&lt;head&gt;</code> part of
 the HTML document: scripts, styles, etc.  It is easiest to put in a separate
 file, which is loaded at startup.  At first, in our exhilarated anticipation
-towards getting the thing up and running, we want to tolerate the absence of
-this file.  Even so, let's produce standards-compliant HTML.
+towards getting the thing up and running, we'll tolerate the absence of this
+file.  Even so, let's produce standards-compliant HTML.
 
 <pre><code>try {
     var preamble = fs.readFileSync('preamble.html');
-} catch (e) { preamble = '&lt;!doctype html&gt;\n'; }
+} catch (e) {
+    preamble = '&lt;!doctype html&gt;\n&lt;title&gt;Blog&lt;/title&gt;\n';
+}
 </code></pre>
 
 <p>To facilitate navigation between the posts, the <code>postscript</code>
-function produces links for going to the previous and next post.  For now, we
-assume that there are no holes in the post id space.
+function generates links for going to the previous and next post.  We assume
+that there are no holes in the post id space, so the links can be generated
+easily.
 
 <pre><code>function postscript(id) {
-    result = ""; 
+    var result = ""; 
     if (Number(id) &gt; 1)
         result += "&lt;p&gt;&lt;a href='/" + (Number(id)-1) + "'&gt;Previous post&lt;/a&gt;";
     if (Number(id) &lt; Number(latestPostId))
@@ -125,7 +128,6 @@ assume that there are no holes in the post id space.
 <p>After that we can create the server and start listening:
 
 <pre><code>var server = http.createServer(listener);
-
 server.listen(3000);</code></pre>
 
 <p>Voil&agrave; &ndash; a working node.js blog engine in 52 lines and 1286 bytes of code. (The code is at <a href='http://github.com/anttisykari/blog'>GitHub</a>.)
