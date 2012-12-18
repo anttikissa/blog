@@ -66,8 +66,6 @@ content width of 550px, which makes running text about 70&ndash;80 characters
 per line and code listings exactly 60 characters wide.
 
 <p>This gives us a nice and readable, if not exceedingly original, starting point.
-<p>We don't have to specify 16 pixels for other elements than headings, since it's the
-default size.
 
 <pre><code>    body {
         line-height: 22px;
@@ -112,13 +110,12 @@ to add a few pixels of extra padding above the element (except inside
 <code>&lt;pre&gt;</code>).  
 
 <p>The text color is tinted slightly towards blue so as to prevent it from
-looking totally dead; and it must be made <code>inline-block</code> so code
-listings with too wide lines, such as the ones you saw in the <a href="/1">first post</a> won't look wrong.
+looking totally dead.
 
 <p>To make it look <em>just</em> right, we also need to tweak the position of
 <code>&lt;pre&gt;</code>'s contents using <code>position: relative</code>, and
-change the relative position of <code>&lt;pre&gt;</code> by a pixel or two 
-using some negative margin.  There.  (This is starting to get a bit too obsessive, so
+change the relative position of <code>&lt;pre&gt;</code> by a pixel or two using
+some negative margin.  There.  (This is starting to get a bit too obsessive, so
 we'll stop this madness right here.)
 
 <pre><code>    pre {
