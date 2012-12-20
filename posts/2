@@ -19,7 +19,7 @@ during development.  This goes to the end of <code>server/run.js</code>:
 </code></pre>
 
 <p>To run the server, we now have to do:
-<pre><code>% while ./server/run.js; do; done</code></pre>
+<pre><code>% while ./server/run.js; do true; done</code></pre>
 
 which is pretty much how you would run a server in production anyway.
 
