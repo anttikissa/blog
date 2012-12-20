@@ -81,7 +81,7 @@ per line and code listings exactly 60 characters wide.
     }
 </code></pre>
 <p>We derive the margins for the common elements from the baseline measure.  Lists and blockquotes demand some indentation; we use multiples of the same measure.
-<pre><code>    h1, p, ul, ol, pre {
+<pre><code>    h1, p, ul, ol, pre, footer {
         margin: 22px 0;
     }
     blockquote {
@@ -156,8 +156,32 @@ we'll stop this madness right here.)
     }
 &lt;/style&gt;
 </code></pre>
-<p>There &ndash; looks better now.
+<p>Finally, we'll fix the placement of the navigation links and decorate them a bit.
 
-<img alt='' src='http://f.cl.ly/items/2d3v2V471T352V3E260p/Screen%20Shot%202012-12-16%20at%2010.05.12%20PM.png'>
+<pre><code>
+    footer a.prev {
+        float: left;
+    }
+        
+    footer a.prev:before {
+        content: '‹ ';
+    }
+ 
+    footer a.next {
+        float: right;
+    }
+ 
+    footer a.next:after {
+        content: ' ›';
+    }
+ 
+    footer {
+        padding-bottom: 22px;
+    }
+</code></pre>
+
+<p>There &ndash; looks nicer now.
+
+<img alt='' src='http://f.cl.ly/items/0N1O441c1t1A0E3K3g2d/Screen%20Shot%202012-12-20%20at%203.42.31%20PM.png'>
 
 <p>But how can we make it better?
