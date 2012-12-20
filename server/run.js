@@ -59,11 +59,14 @@ try {
 }
 
 function postscript(id) {
-	var result = "";
+	var result = "<footer>";
 	if (Number(id) > 1)
-		result += "<p><a href='/" + (Number(id)-1) + "'>Previous post</a>";
+		result += "<a class='prev' "
+			+ "href='/" + (Number(id)-1) + "'>Previous post</a>";
 	if (Number(id) < Number(latestPostId))
-		result += "<p><a href='/" + (Number(id)+1) + "'>Next post</a>";
+		result += "<a class='next' "
+			+ "href='/" + (Number(id)+1) + "'>Next post</a>";
+	result += "</footer>";
 	return result;
 }
 
