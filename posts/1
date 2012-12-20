@@ -104,7 +104,7 @@ towards getting the thing up and running, we'll tolerate the absence of this
 file.  Even so, let's produce standards-compliant HTML.
 
 <pre><code>try {
-    var preamble = fs.readFileSync('preamble.html');
+    var preamble = fs.readFileSync(__dirname + '/../preamble.html');
 } catch (e) {
     preamble = '&lt;!doctype html&gt;\n&lt;title&gt;Blog&lt;/title&gt;\n';
 }

@@ -53,7 +53,7 @@ function listener(req, res) {
 }
 
 try {
-	var preamble = fs.readFileSync('preamble.html');
+	var preamble = fs.readFileSync(__dirname + '/../preamble.html');
 } catch (e) {
 	preamble = '<!doctype html>\n<title>Blog</title>\n';
 }
