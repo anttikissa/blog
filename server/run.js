@@ -3,6 +3,10 @@
 var http = require('http');
 var fs = require('fs');
 
+var env = process.env.BLOG_ENV == 'dev' ? 'dev' : 'prod'
+
+console.log("Environment: " + env);
+
 var filenames = fs.readdirSync(__dirname + "/../posts");
 var postIds = filenames.filter(function(filename) {
 	return filename.match(/^\d+$/);
@@ -66,5 +70,7 @@ function postscript(id) {
 var server = http.createServer(listener);
 server.listen(3000);
 
-setTimeout(function() { process.exit(0); }, 1000);
+if (env == 'dev') {
+	setTimeout(function() { process.exit(0); }, 1000);
+}
 
