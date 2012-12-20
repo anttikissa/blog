@@ -158,8 +158,7 @@ we'll stop this madness right here.)
 </code></pre>
 <p>Finally, we'll fix the placement of the navigation links and decorate them a bit.
 
-<pre><code>
-    footer a.prev {
+<pre><code>footer a.prev {
         float: left;
     }
         
@@ -182,6 +181,6 @@ we'll stop this madness right here.)
 
 <p>There &ndash; looks nicer now.
 
-<img alt='' src='http://f.cl.ly/items/0N1O441c1t1A0E3K3g2d/Screen%20Shot%202012-12-20%20at%203.42.31%20PM.png'>
+<img alt='' src='http://f.cl.ly/items/0w3f0G1r3I0p3l2z1m1I/Screen%20Shot%202012-12-20%20at%203.47.17%20PM.png'>
 
 <p>But how can we make it better?
