@@ -1,6 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 
-BLOG_ENV=dev
+cd $(dirname $0)
 
-while ./server/run.js --restart; do true; done
+export BLOG_ENV=dev
+
+while ./server/run.js; do true; done
 
