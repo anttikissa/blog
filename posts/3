@@ -151,7 +151,7 @@ introduce two:
 <li>The environment "<b>dev</b>" restarts once a second, like we're used to.  In
 the future, it might have some other features that help development and
 debugging.
-<li>The environment "<b>prod</b>" won't do anything tricky.</b>
+<li>The environment "<b>prod</b>" won't do anything tricky.
 </ul>
 
 <p>We'll make the environment configurable through <code>PROD_ENV</code>
