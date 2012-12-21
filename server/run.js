@@ -5,7 +5,11 @@ var fs = require('fs');
 
 var env = process.env.BLOG_ENV == 'dev' ? 'dev' : 'prod'
 
-console.log("Environment: " + env);
+function log(message) {
+	console.log(new Date().toISOString().replace(/[TZ]/g, ' ') + message);
+}
+
+log("Server starting, env: " + env);
 
 var filenames = fs.readdirSync(__dirname + "/../posts");
 var postIds = filenames.filter(function(filename) {
@@ -72,6 +76,7 @@ function postscript(id) {
 
 var server = http.createServer(listener);
 server.listen(3000);
+log("Listening at port 3000.");
 
 if (env == 'dev') {
 	setTimeout(function() { process.exit(0); }, 1000);
