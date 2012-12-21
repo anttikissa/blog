@@ -1,4 +1,235 @@
-<h1>Deploying</h1>
+<h1>Deploying the blog</h1>
 
-Now now.
+<p>Now that the basics of our blog are in a nice enough shape (at least from the
+reader's viewpoint), we'll put it live.
+
+<p>We'll be using our previously setup Linux server, <code>kant</code>, located
+at <code>blog.sykari.net</code>.  It's a Linux box running Ubuntu 12.04 LTS
+&ndash; mine is running in my kitchen, but you could basically get a similar one
+from Amazon EC2 or any other run-of-the mill provider.  We won't cover the setup
+procedure in exact detail.  Nor do we cover acquiring the domain name or setting
+up DNS. (I got my domain from <a
+href='http://nearlyfreespeech.net/'>NearlyFreeSpeech.net</a>, and DNS
+from <a href='http://zerigo.com/'>Zerigo</a>.)
+
+<p>The assumption is that we have a recent <a href='http://nginx.org/'>nginx</a>
+running on the server and <a href='http://nodejs.org/'>node.js</a> >= 0.8.16
+installed:
+
+<pre><code>kant:~% nginx -v
+nginx version: nginx/1.1.19
+kant:~% service nginx status         
+ * nginx is running
+kant:~% node --version
+v0.8.16
+</code></pre>
+
+<p>We then proceed to write an <a href='http://upstart.ubuntu.com/'>upstart</a>
+script for our server.  We'll place it in <code>deploy/</code>, from where it
+will be transferred to the server by a deploy script (which we'll write later).
+
+<p>Here is the upstart script, <code>deploy/blog.conf</code>:
+
+<pre><code>description "blog"
+
+start on startup
+stop on shutdown
+
+env NAME=blog
+env USERNAME=antti
+env PROGRAM=/opt/apps/blog/run.sh
+env PIDFILE=/var/run/blog.pid
+env LOG=/var/log/blog.log
+
+script
+    echo $$ &gt; $PIDFILE
+    exec sudo -u $USERNAME $PROGRAM &gt;&gt; $LOG 2&gt;&amp;1
+end script
+
+pre-start script
+    echo "`date -u '+%Y-%m-%d %T.%3N'` [sys] Starting" &gt;&gt; $LOG
+end script
+
+pre-stop script
+    rm $PIDFILE
+    echo "`date -u '+%Y-%m-%d %T.%3N'` [sys] Stopping" &gt;&gt; $LOG 
+end script
+</code></pre>
+
+<p>Nothing spectacular here &ndash; to learn how to write upstart scripts, refer to the documentation.
+
+<p>Make sure you don't have a service called <code>blog</code> on your system
+already; if you do, change <code>NAME</code> to something else.  I'm using the
+user <code>antti</code> to run the blog &ndash; you can pick <code>ubuntu</code>
+or whatever you like.  The app goes into <code>/opt/apps/blog</code>.  The user
+must own that directory, or be able to create it if it doesn't exist.
+
+<p>The upstart script must go into <code>/etc/init</code> in order to take
+effect.  To automate the installation of the blog and the script, we use a
+deploy script <code>deploy/deploy.sh</code>:
+
+<pre><code>#!/bin/sh
+
+set -ex
+
+TARGETHOST=antti@blog.sykari.net
+PROGRAM=blog
+
+cd $(dirname $0)/..
+
+ssh $TARGETHOST mkdir -p /opt/apps/$PROGRAM
+rsync -r --exclude .git --exclude-file .gitignore $TARGETHOST:/opt/apps/$PROGRAM
+ssh $TARGETHOST sudo cp /opt/apps/$PROGRAM/deploy/$PROGRAM.conf /etc/init/
+ssh $TARGETHOST "sudo stop $PROGRAM; sudo start $PROGRAM"
+
+</code></pre>
+
+<p>Again, change the username and host to what suits you best.  I recommend
+setting up SSH keys so you don't need to type in a password.  You also need to
+be able to run <code>sudo</code> without password: make sure that
+<code>NOPASSWD</code> is in the right place in <code>/etc/sudoers</code>.
+
+<p>The deployment script is simple and crude enough for a less than a mission
+critical server.  And because it doesn't do anything unnecessary, it is as fast
+as it could be.  On my machine and network, deploying a new server and
+restarting it takes about a second.  Even 1000 posts doesn't slow it down much;
+at 5000 posts it starts to take a few seconds.  At that point, one might start
+thinking about possible optimizations.
+
+<p>Now you should be able to deploy the blog.  This is how it looks like if
+everything goes all right:
+
+<pre><code>% ./deploy/deploy.sh
++ TARGETHOST=antti@blog.sykari.net
++ NAME=blog
+++ dirname ./deploy/deploy.sh
++ cd ./deploy/..
++ ssh antti@blog.sykari.net mkdir -p /opt/apps/blog
++ rsync -r . antti@blog.sykari.net:/opt/apps/blog
++ ssh antti@blog.sykari.net sudo cp /opt/apps/blog/deploy/blog.conf /etc/init/
++ ssh antti@blog.sykari.net 'sudo stop blog; sudo start blog'
+blog stop/waiting
+blog start/running, process 17229
+</code></pre>
+
+<p>Check that the server is running by logging in to the machine and saying:
+
+<pre><code>kant:~% curl -I http://localhost:3000
+HTTP/1.1 200 OK
+Content-Type: text/html
+Date: Fri, 21 Dec 2012 12:07:27 GMT
+Connection: keep-alive
+</code></pre>
+
+<p>Now we still need to redirect clients coming from the outside to our 
+server.  Let's assume that nginx is already running on the machine and listening
+to port 80.  Then doing the redirect is only a matter of adding an nginx site at
+<code>/etc/nginx/sites-available/blog.sykari.net</code>:
+
+<pre><code>server {
+    server_name blog.sykari.net;
+    access_log /var/log/blog.access.log;
+        
+    location / { 
+      proxy_pass        http://localhost:3000;
+      proxy_set_header  X-Real-IP  $remote_addr;
+      proxy_set_header  X-Real-Host $host;
+    }   
+}</code></pre>
+
+<p>and then linking that file to <code>/etc/nginx/sites-enabled/</code>.  After restarting nginx, the blog should be served at <code>http://blog.sykari.net/</code>.
+
+<h2>Aren't we forgetting something?</h2>
+
+<p>That was pretty much the quickest route to getting a simple Node.js blog
+published to the world.  But the server is still restarting once in a second,
+which is hardly appropriate for a production server.  We'll need to make our
+server aware of environments, of which we will
+introduce two:
+
+<ul>
+<li>The environment "<b>dev</b>" restarts once a second, like we're used to.  In
+the future, it might have some other features that help development and
+debugging.
+<li>The environment "<b>prod</b>" won't do anything tricky.</b>
+</ul>
+
+<p>We'll make the environment configurable through <code>PROD_ENV</code>
+environment variable.  If it doesn't exist or is something else than "dev", then
+let's assume production environment.  We'll first modify <code>run.sh</code> to
+run in development mode:
+
+<pre><code>#!/bin/sh
+
+cd $(dirname $0)
+
+<b>export BLOG_ENV=dev</b>
+
+while ./server/run.js; do true; done
+</code></pre>
+
+<p>Then we take the variable into account at the start of
+<code>server/run.js</code>.  Next to it, we introduce a logging utility that
+prints the current time in the same format as the upstart script we wrote:
+
+<pre><code>...
+var fs = require('fs');
+
+<b>var env = process.env.BLOG_ENV == 'dev' ? 'dev' : 'prod'
+
+function log(message) {
+    console.log(new Date().toISOString().replace(/[TG]g/, ' ') + message);
+}
+
+log("Server starting, env: " + env);</b>
+
+var filenames = fs.readdirSync(__dirname + "/../posts");
+...
+</code></pre>
+
+<p>At the end, we'll make some modifications as well:</p>
+
+<pre><code>...
+var server = http.createServer(listener);
+server.listen(3000);
+<b>log("Listening at port 3000");</b>
+
+<b>if (env == 'dev') {</b>
+	setTimeout(function() { process.exit(0); }, 1000);
+<b>}</b>
+</code></pre>
+
+<p>Logging at startup and just after starting to listen allows us to measure how
+long it takes to load the posts into memory.
+
+<p>Now the server never exits, except in case of error.  In production we want
+to restart it automatically if it crashes, so we'll make a script for that.
+Let's name it <code>prod-run.sh</code>:
+
+<pre><code>#!/bin/sh
+
+cd $(dirname $0)
+
+while true; do
+    ./server/run.js
+    echo "Server stopped, return code $?."
+    sleep 1
+    echo "Restarting..."
+done
+</code></pre>
+
+<p>The <code>sleep 1</code> is there to prevent the script from spinning
+indefinitely, if the server fails to start for some reason.
+
+<p>Now the only thing left is to change <code>run.sh</code> to
+<code>prod-run.sh</code> in <code>deploy/blog.conf</code> and redeploy.
+
+<p>Now we should have a production-quality blog up and running:
+<pre><code>2012-12-21 13:33:02.396 [sys] Starting
+2012-12-21 13:33:02.451 Server starting, env: prod
+2012-12-21 13:33:02.457 Listening at port 3000.
+</code></pre>
+
+<p>But how could we make it better?
+
 
