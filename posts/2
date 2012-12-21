@@ -21,9 +21,24 @@ during development.  This goes to the end of <code>server/run.js</code>:
 <p>To run the server, we now have to do:
 <pre><code>% while ./server/run.js; do true; done</code></pre>
 
-which is pretty much how you would run a server in production anyway.
+<p>which is pretty much how you would run a server in production anyway.
 
-<p>Then let's fix (2) by introducing some stylesheets.
+<p>While we're at it, let's write a script to keep the server running.  We'll
+call it <code>run.sh</code>.
+
+<pre><code>#!/bin/sh
+
+cd $(dirname $0)
+
+while ./server/run.js; do true; done
+</code></pre>
+
+The script uses <code>dirname</code> to find out where the script itself is
+located, and changes the working directory to that.  Then it repeatedly runs the
+server until it exits with an error code other than 0.  That means we'll have
+to restart the runner if there is a compilation or runtime error.
+
+<p>Now let's fix problem (2) by introducing some stylesheets.
 
 <p>We don't even have to touch the blog engine itself for this one; let's start
 writing <code>preamble.html</code>.  We start with the usual HTML5 boilerplate.
@@ -62,15 +77,27 @@ off-black on slightly off-white:
 
 <p>After a while of fiddling in Fireworks, we arrive at suitable font selection
 (16px Palatino combined with 15px Courier New on a 22px baseline grid) and
-content width of 550px, which makes running text about 70&ndash;80 characters
-per line and code listings exactly 60 characters wide.
+content width of 506px, which makes running text just shy of 70 characters per
+line.  While we're at it, let's make images the same size by default.
+
+Code listings like to be somewhat wider &ndash; we'll give them exactly 770
+pixels.  These values come from a grid with 110px columns and 22px gutters:
+
+<p><img style="margin-left: -286px; width: inherit;" src='http://f.cl.ly/items/2L0V1c1X21363H3T0j2g/grid.png'>
 
 <p>This gives us a nice and readable, if not exceedingly original, starting point.
 
 <pre><code>    body {
         line-height: 22px;
-        width: 550px;
+        width: 506px;
         margin: 0 auto;
+    }
+    img {
+        display: block;
+        width: 506px;
+    }
+    pre {
+        width: 766px; /* with 2+2px padding (see below), 770px */
     }
     code {
         font-family: 'Courier New';
@@ -80,7 +107,7 @@ per line and code listings exactly 60 characters wide.
         font-size: 16px;
     }
 </code></pre>
-<p>We derive the margins for the common elements from the baseline measure.  Lists and blockquotes demand some indentation; we use multiples of the same measure.
+<p>We derive the margins for the common elements from the baseline measure.  Lists and blockquotes demand some indentation; we use multiples of the base unit 22 pixels.
 <pre><code>    h1, p, ul, ol, pre, footer {
         margin: 22px 0;
     }
@@ -158,7 +185,7 @@ we'll stop this madness right here.)
 </code></pre>
 <p>Finally, we'll fix the placement of the navigation links and decorate them a bit.
 
-<pre><code>footer a.prev {
+<pre><code>    footer a.prev {
         float: left;
     }
         
@@ -181,6 +208,6 @@ we'll stop this madness right here.)
 
 <p>There &ndash; looks nicer now.
 
-<img alt='' src='http://f.cl.ly/items/0w3f0G1r3I0p3l2z1m1I/Screen%20Shot%202012-12-20%20at%203.47.17%20PM.png'>
+<p><img alt='' src='http://f.cl.ly/items/3i0J0e0v1C1S3U2j2A22/Screen%20Shot%202012-12-21%20at%2012.13.38%20PM.png'>
 
 <p>But how can we make it better?
