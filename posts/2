@@ -86,7 +86,7 @@ line.  While we're at it, let's make images the same size by default.
 Code listings like to be somewhat wider &ndash; we'll give them exactly 770
 pixels.  These values come from a grid with 110px columns and 22px gutters:
 
-<p><img style="margin-left: -286px; width: inherit;" src='http://f.cl.ly/items/2L0V1c1X21363H3T0j2g/grid.png'>
+<p><img style="margin-left: -286px; width: inherit;" alt='' src='http://f.cl.ly/items/2L0V1c1X21363H3T0j2g/grid.png'>
 
 <p>This gives us a nice and readable, if not exceedingly original, starting point.
 
