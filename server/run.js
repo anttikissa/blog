@@ -32,9 +32,9 @@ function readPost(id) {
 	var datePattern = /<date[^>]*datetime='([^\']*)'[^>]*>/;
 	var dateMatch = content.match(datePattern);
 	if (dateMatch) {
-		var postDate = new Date(dateMatch[1]);
+		var date = new Date(dateMatch[1]);
 		content = content.replace(datePattern,
-			dateMatch[0] + formatDate(postDate));
+			dateMatch[0] + formatDate(date));
 	}
 
 	function formatDate(date) {
@@ -48,7 +48,8 @@ function readPost(id) {
 
 	return {
 		title: title,
-		content: content
+		content: content,
+		date: date
 	}
 }
 
