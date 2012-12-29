@@ -29,8 +29,23 @@ function readPost(id) {
 	var content = fs.readFileSync(__dirname + "/../posts/" + id, "utf-8");
 	var titleMatch = content.match(/<h1>([^<]*)<\/h1>/);
 	var title = titleMatch ? titleMatch[1] : "no title"
+	var datePattern = /<date[^>]*datetime='([^\']*)'[^>]*>/;
+	var dateMatch = content.match(datePattern);
+	if (dateMatch) {
+		var postDate = new Date(dateMatch[1]);
+		content = content.replace(datePattern,
+			dateMatch[0] + formatDate(postDate));
+	}
 
-	console.log(title);
+	function formatDate(date) {
+		var months = [
+			'January', 'February', 'March', 'April',
+			'May', 'June', 'July', 'August', 'September',
+			'October', 'November', 'December']
+
+		return months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
+	}
+
 	return {
 		title: title,
 		content: content
