@@ -25,6 +25,15 @@ postIds.forEach(function(id) {
 	posts[id] = readPost(id);
 });
 
+function formatDate(date) {
+	var months = [
+		'January', 'February', 'March', 'April',
+		'May', 'June', 'July', 'August', 'September',
+		'October', 'November', 'December']
+
+	return months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
+}
+
 function readPost(id) {
 	var content = fs.readFileSync(__dirname + "/../posts/" + id, "utf-8");
 	var titleMatch = content.match(/<h1>([^<]*)<\/h1>/);
@@ -37,15 +46,6 @@ function readPost(id) {
 			dateMatch[0] + formatDate(date));
 	}
 
-	function formatDate(date) {
-		var months = [
-			'January', 'February', 'March', 'April',
-			'May', 'June', 'July', 'August', 'September',
-			'October', 'November', 'December']
-
-		return months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
-	}
-
 	return {
 		title: title,
 		content: content,
@@ -54,10 +54,13 @@ function readPost(id) {
 }
 
 function listener(req, res) {
+	console.log(req.url);
 	var match = req.url.match(/^\/(\d+|)$/);
 	if (match) {
 		res.writeHead(200, { 'Content-Type': 'text/html' });
 		serve(match[1] || latestPostId);
+	} else if (req.url == '/posts') {
+		servePosts();
 	} else {
 		res.writeHead(404);
 		res.end("Not found");
@@ -67,6 +70,22 @@ function listener(req, res) {
 		res.write(preamble.replace('$title', 'Blog - ' + posts[id].title));
 		res.write(posts[id].content || 'Post not found');
 		res.end(postscript(id));
+	}
+
+	function servePosts() {
+		res.write(preamble.replace('$title', 'Blog - all posts'));
+		res.write("<h1>All posts</h1>");
+		res.write("<ul>");
+		for (id in posts) {
+			var post = posts[id];
+			res.write("<li><a href='/" + id + "'>" + post.title + "</a>");
+			if (post.date) {
+				res.write(" - <time datetime='" + post.date.toISOString()
+					+ "'>" + formatDate(post.date) + "</time>");
+			}
+		}
+		res.write("</ul>");
+		res.end();
 	}
 }
 
