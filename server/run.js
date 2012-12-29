@@ -37,8 +37,8 @@ function formatDate(date) {
 function readPost(id) {
 	var content = fs.readFileSync(__dirname + "/../posts/" + id, "utf-8");
 	var titleMatch = content.match(/<h1>([^<]*)<\/h1>/);
-	var title = titleMatch ? titleMatch[1] : "no title"
-	var datePattern = /<date[^>]*datetime='([^\']*)'[^>]*>/;
+	var title = titleMatch ? titleMatch[1] : "no title";
+	var datePattern = /<time[^>]*datetime='([^\']*)'[^>]*>/;
 	var dateMatch = content.match(datePattern);
 	if (dateMatch) {
 		var date = new Date(dateMatch[1]);

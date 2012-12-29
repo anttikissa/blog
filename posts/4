@@ -1,5 +1,5 @@
 <h1>Fixing the small things</h1>
-<date datetime='2012-12-29T13:22:35.244Z'></date>
+<time datetime='2012-12-29T13:22:35.244Z'></time>
 
 <p>There are a couple of things we'd like to fix.
 
@@ -19,7 +19,7 @@ of <code>server/run.js</code> a bit:
 <pre><code>function readPost(id) {
     var content = fs.readFileSync(__dirname + "/../posts/" + id, "utf-8");
     var titleMatch = content.match(/&lt;h1&gt;([^&lt;]*)&lt;\/h1&gt;/);
-    var title = titleMatch ? titleMatch[1] : "no title"
+    var title = titleMatch ? titleMatch[1] : "no title";
     
     return {
         title: title,
@@ -71,19 +71,19 @@ is stored next to the content.  For this to work, we must change the code servin
 &lt;style&gt;
 </code></pre>
 
-<p>Finally, let's assume that every post comes with a <code>date</code> element
+<p>Finally, let's assume that every post comes with a <code>time</code> element
 with the date encoded in the <code>datetime</code> attribute, like this:
 
 <pre><code>&lt;h1&gt;Fixing the small things&lt;/h1&gt;
-&lt;date datetime='2012-12-29T13:22:35.244Z'&gt;&lt;/date&gt;
+&lt;time datetime='2012-12-29T13:22:35.244Z'&gt;&lt;/time&gt;
 &lt;p&gt;The post starts here...
 </code></pre>
 
 <p>Using some regular expression machinery, we parse the date and inject a
 human-readable representation into the <code>date</code> element:
 
-<pre><code>var title = titleMatch ? titleMatch[1] : "no title"
-    <b>var datePattern = /&lt;date[^&gt;]*datetime='([^\']*)'[^&gt;]*&gt;/;
+<pre><code>    var title = titleMatch ? titleMatch[1] : "no title";
+    <b>var datePattern = /&lt;time[^&gt;]*datetime='([^\']*)'[^&gt;]*&gt;/;
     var dateMatch = content.match(datePattern);
     if (dateMatch) {
         var date = new Date(dateMatch[1]);
