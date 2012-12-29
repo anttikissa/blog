@@ -1,0 +1,172 @@
+<h1>Fixing the small things</h1>
+<date datetime='2012-12-29T13:22:35.244Z'></date>
+
+<p>There are a couple of things we'd like to fix.
+
+<h2>Adding interesting metadata to posts</h2>
+
+<p>Right now, the server doesn't know the title or date of the posts.  Let's fix
+that.  To make room for these changes, we need to change the post loading code
+of <code>server/run.js</code> a bit:
+
+<pre><code>postIds.forEach(function(id) {
+<b>    posts[id] = readPost(id);</b>
+});
+</code></pre>
+
+<p><code>readPost</code> looks like this (let's read the title only for now):
+
+<pre><code>function readPost(id) {
+    var content = fs.readFileSync(__dirname + "/../posts/" + id, "utf-8");
+    var titleMatch = content.match(/&lt;h1&gt;([^&lt;]*)&lt;\/h1&gt;/);
+    var title = titleMatch ? titleMatch[1] : "no title"
+    
+    return {
+        title: title,
+        content: content
+    }
+}
+</code></pre>
+
+<p>We try to find a sequence consisting of <code>&lt;h1&gt;</code>, followed by
+the title, followed by <code>&lt;/h1&gt;</code>.  Regular expressions, our
+unreadable little friends, come to the resque again.  If the title is found, it
+is stored next to the content.  For this to work, we must change the code serving the posts to only serve the content, not the whole post object:
+
+<pre><code>    function serve(id) {
+        res.write(preamble);
+<b>        res.write(posts[id].content || 'Post not found');</b>
+        res.end(postscript(id));
+</code></pre>
+
+<p>Now we can also serve better quality links at the navigation section (while we're at it, we get rid of the repeated <code>Number()</code> calls):
+
+<pre><code>function postscript(id) {
+<b>    id = Number(id);</b>
+    var result = "&lt;footer&gt;"; 
+    if (<b>id</b> &gt; 1)
+        result += "&lt;a class='prev' "
+            + "href='/" + (<b>id - 1</b>) 
+            + "'&gt;<b>" + posts[id - 1].title + "</b>&lt;/a&gt;";
+    if (<b>id</b> &lt; Number(latestPostId))
+        result += "&lt;a class='next' "
+            + "href='/" + (<b>id + 1</b>) 
+            + "'&gt;<b>" + posts[id + 1].title + "</b>&lt;/a&gt;";
+    result += "&lt;/footer&gt;";
+    return result;
+}
+</code></pre>
+
+<p>And while we're at it, change the title in the <code>head</code> as well:
+
+<pre><code>    function serve(id) {
+<b>        res.write(preamble.replace('$title', 'Blog - ' + posts[id].title);</b>
+        res.write(posts[id].content || 'Post not found');
+</code></pre>
+
+<p>This, of course, requires that <code>preamble.html</code> has:
+
+<pre><code>&lt;meta charset='utf-8'&gt;
+<b>&lt;title&gt;$title&lt;/title&gt;</b>
+&lt;style&gt;
+</code></pre>
+
+<p>Finally, let's assume that every post comes with a <code>date</code> element
+with the date encoded in the <code>datetime</code> attribute, like this:
+
+<pre><code>&lt;h1&gt;Fixing the small things&lt;/h1&gt;
+&lt;date datetime='2012-12-29T13:22:35.244Z'&gt;&lt;/date&gt;
+&lt;p&gt;The post starts here...
+</code></pre>
+
+<p>Using some regular expression machinery, we parse the date and inject a
+human-readable representation into the <code>date</code> element:
+
+<pre><code>var title = titleMatch ? titleMatch[1] : "no title"
+    <b>var datePattern = /&lt;date[^&gt;]*datetime='([^\']*)'[^&gt;]*&gt;/;
+    var dateMatch = content.match(datePattern);
+    if (dateMatch) {
+        var date = new Date(dateMatch[1]);
+        content = content.replace(datePattern,
+            dateMatch[0] + formatDate(date));
+    }</b>
+</code></pre>
+
+<p>The formatting is a standard US English one (we'll make it a global function
+as it will be needed shortly later):
+
+<pre><code>function formatDate(date) {
+    var months = [
+        'January', 'February', 'March', 'April',
+        'May', 'June', 'July', 'August', 'September',
+        'October', 'November', 'December']
+
+    return months[date.getMonth()] + ' ' + date.getDate()
+        + ', ' + date.getFullYear();
+}
+</code></pre>
+
+<p>And, of course, the date needs to be stored:
+
+<pre><code>    return {
+        title: title,
+        content: content<b>,
+        date: date</b>
+    }
+</code></pre>
+
+<p>After this (and after updating the older posts with approximate dates), we'll
+be able to render a list of all of the posts.  We do that by adding a bit of
+code to the <code>listener</code> function:
+
+<pre><code>    if (match) {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        serve(match[1] || latestPostId);
+    } <b>else if (req.url == '/posts') {
+        servePosts();
+    }</b> else {
+        res.writeHead(404);
+        res.end("Not found");
+</code></pre>
+
+<p>and then proceed to implement <code>servePosts</code> next to <code>serve</code>:
+
+<pre><code>    function servePosts() {
+        res.write(preamble.replace('$title', 'Blog - all posts'));
+        res.write("&lt;h1&gt;All posts&lt;/h1&gt;");
+        res.write("&lt;ul&gt;");
+        for (id in posts) {
+            var post = posts[id];
+            res.write("&lt;li&gt;&lt;a href='/" + id + "'&gt;" + post.title + "&lt;/a&gt;");
+            if (post.date) {
+                res.write(" - &lt;time datetime='" + post.date.toISOString()
+                    + "'&gt;" + formatDate(post.date) + "&lt;/time&gt;");
+            }
+        }
+        res.write("&lt;/ul&gt;");
+        res.end();
+    }
+</code></pre>
+
+<h2>Change styling of subheadings to look more distinctive</h2>
+
+<p>Now that I started to write this post, I noticed that subheadings
+(<code>&lt;h2&gt;</code>) look the same as headings (<code>&lt;h2&gt;</code>).
+Let's make them look like <em>this</em>.  In <code>preamble.html</code>, we add
+some styling to <code>h2</code> and give it some margin as well:
+
+<pre><code>        font-size: 16px;
+    }
+<b>    h2 {
+        font-weight: normal;
+        font-style: italic;
+    }
+    h1, h2, p, ul, ol, pre, footer {</b>
+        margin: 22px 0;
+    }
+</code></pre>
+
+<h2>Make authoring easier</h2>
+
+...
+
