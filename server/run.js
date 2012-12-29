@@ -59,22 +59,8 @@ function listener(req, res) {
 		res.writeHead(200, { 'Content-Type': 'text/html' });
 		serve(match[1] || latestPostId);
 	} else {
-		fs.readFile(__dirname + '/../public/' + req.url,
-			function(err, data) {
-				if (err) {
-//					console.log(err);
-					res.writeHead(404);
-					res.end("Not found");
-				} else {
-					var filetype = 'text/plain';
-					if (req.url.match(/\.png$/)) {
-						filetype = 'image/png';
-					}
-
-					res.writeHead(200);
-					res.end(data);
-				}
-		 	});
+		res.writeHead(404);
+		res.end("Not found");
 	}
 
 	function serve(id) {
