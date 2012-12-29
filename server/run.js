@@ -22,8 +22,20 @@ var latestPostId = postIds[postIds.length - 1];
 var posts = Object.create(null);
 
 postIds.forEach(function(id) {
-	posts[id] = fs.readFileSync(__dirname + "/../posts/" + id, "utf-8");
+	posts[id] = readPost(id);
 });
+
+function readPost(id) {
+	var content = fs.readFileSync(__dirname + "/../posts/" + id, "utf-8");
+	var titleMatch = content.match(/<h1>([^<]*)<\/h1>/);
+	var title = titleMatch ? titleMatch[1] : "no title"
+
+	console.log(title);
+	return {
+		title: title,
+		content: content
+	}
+}
 
 function listener(req, res) {
 	var match = req.url.match(/^\/(\d+|)$/);
@@ -50,8 +62,8 @@ function listener(req, res) {
 	}
 
 	function serve(id) {
-		res.write(preamble);
-		res.write(posts[id] || 'Post not found');
+		res.write(preamble.replace('$title', 'Blog - ' + posts[id].title));
+		res.write(posts[id].content || 'Post not found');
 		res.end(postscript(id));
 	}
 }
@@ -63,13 +75,14 @@ try {
 }
 
 function postscript(id) {
+	id = Number(id);
 	var result = "<footer>";
-	if (Number(id) > 1)
+	if (id > 1)
 		result += "<a class='prev' "
-			+ "href='/" + (Number(id)-1) + "'>Previous post</a>";
-	if (Number(id) < Number(latestPostId))
+			+ "href='/" + (id - 1) + "'>" + posts[id - 1].title + "</a>";
+	if (id < Number(latestPostId))
 		result += "<a class='next' "
-			+ "href='/" + (Number(id)+1) + "'>Next post</a>";
+			+ "href='/" + (id + 1) + "'>" + posts[id + 1].title + "</a>";
 	result += "</footer>";
 	return result;
 }
