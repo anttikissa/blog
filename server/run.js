@@ -57,7 +57,7 @@ function listener(req, res) {
 }
 
 try {
-	var preamble = fs.readFileSync(__dirname + '/../preamble.html');
+	var preamble = fs.readFileSync(__dirname + '/../preamble.html', 'utf-8');
 } catch (e) {
 	preamble = '<!doctype html>\n<title>Blog</title>\n';
 }
