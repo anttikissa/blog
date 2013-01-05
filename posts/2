@@ -1,6 +1,8 @@
 <h1>Next steps</h1>
 <time datetime='2012-12-17T20:06:46.000Z'></time>
 
+<h2>Where are we?</h2>
+
 <p>Now it's a good time to take a look at the blog and observe some of its
 shortcomings.
 
@@ -14,7 +16,9 @@ shortcomings.
 
 <p>In this session, we'll solve (1) and (2).
 
-<p>For (1), let's do a quick and dirty fix and restart the server
+<h2>1. Making changes visible immediately</h2>
+
+<p>Let's do a quick and dirty fix and restart the server
 every second.  This will give us some downtime, but it's more than acceptable
 during development.  This goes to the end of <code>server/run.js</code>:
 
@@ -43,7 +47,7 @@ located, and changes the working directory to that.  Then it repeatedly runs the
 server until it exits with an error code other than 0.  That means we'll have
 to restart the runner if there is a compilation or runtime error.
 
-<p>Now let's fix problem (2) by introducing some stylesheets.
+<h2>2. Adding a little CSS</h2>
 
 <p>We don't even have to touch the blog engine itself for this one; let's start
 writing <code>preamble.html</code>.  We start with the usual HTML5 boilerplate.
@@ -81,9 +85,10 @@ off-black on slightly off-white:
 </code></pre>
 
 <p>After a while of fiddling in Fireworks, we arrive at suitable font selection
-(16px Palatino combined with 15px Courier New on a 22px baseline grid) and
-content width of 506px, which makes running text just shy of 70 characters per
-line.  While we're at it, let's make images the same size by default.
+(16px Palatino combined with 15px Courier New on a 22px baseline grid, with
+<code>&lt;h1&gt;</code> being 22px as well) and content width of 506px, which
+makes the running text just shy of 70 characters per line.  While we're at it,
+let's make images the same size by default.
 
 Code listings like to be somewhat wider &ndash; we'll give them exactly 770
 pixels.  These values come from a grid with 110px columns and 22px gutters:
@@ -108,7 +113,10 @@ pixels.  These values come from a grid with 110px columns and 22px gutters:
         font-family: 'Courier New';
         font-size: 15px;
     }
-    h1, h2, h3 {
+    h1 {
+        font-size: 22px;
+    }
+    h2, h3 {
         font-size: 16px;
     }
 </code></pre>
@@ -117,6 +125,9 @@ Lists and blockquotes demand some indentation; we use multiples of the base unit
 (22 pixels).
 <pre><code>    h1, p, ul, ol, pre, footer {
         margin: 22px 0;
+    }
+    h1 {
+        margin-top: 44px;
     }
     blockquote {
         margin: 22px 44px;
