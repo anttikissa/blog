@@ -153,8 +153,7 @@ code to the <code>listener</code> function:
 </code></pre>
 
 Now we get a nice list of all posts at <a href='/posts'>/posts</a>, although
-we must know how to navigate there by ourselves.  (Adding a link is left as an
-exercise for the reader.)
+we must know how to navigate there by ourselves.  
 
 <h2>Change styling of subheadings to look more distinctive</h2>
 
@@ -178,3 +177,8 @@ some styling to <code>h2</code> and give it some margin as well:
 
 ...
 
+<h2>Exercises</h2>
+
+<ul>
+<li>Add link to <code>/posts</code> to a suitable place.
+</ul>
