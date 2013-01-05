@@ -111,7 +111,9 @@ pixels.  These values come from a grid with 110px columns and 22px gutters:
         font-size: 16px;
     }
 </code></pre>
-<p>We derive the margins for the common elements from the baseline measure.  Lists and blockquotes demand some indentation; we use multiples of the base unit (22 pixels).
+<p>We derive the margins for the common elements from the baseline measure.
+Lists and blockquotes demand some indentation; we use multiples of the base unit
+(22 pixels).
 <pre><code>    h1, p, ul, ol, pre, footer {
         margin: 22px 0;
     }
@@ -159,13 +161,12 @@ we'll stop this madness right here.)
         line-height: 18px;
         border-top: 3px solid #f3f3f3;
         color: #456;
-        display: inline-block;
     }
 
     pre > code {
+        padding: 0;
         line-height: 22px;
         border-top: none;
-        padding: 0;
     }
 </code></pre>
 <p>Finally, let's pick a color for the links.  Say, a nice lively green.
