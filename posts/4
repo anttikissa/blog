@@ -34,9 +34,11 @@ unreadable little friends, come to the resque again.  If the title is found, it
 is stored next to the content.  For this to work, we must change the code serving the posts to only serve the content, not the whole post object:
 
 <pre><code>    function serve(id) {
-        res.write(preamble);
-<b>        res.write(posts[id].content || 'Post not found');</b>
-        res.end(postscript(id));
+        if (posts[id]) {
+            res.write(preamble);
+<b>            res.write(posts[id].content);</b>
+            res.end(postscript(id));
+        } else {
 </code></pre>
 
 <p>Now we can also serve better quality links at the navigation section (while we're at it, we get rid of the repeated <code>Number()</code> calls):
@@ -60,11 +62,13 @@ is stored next to the content.  For this to work, we must change the code servin
 <p>And while we're at it, change the title in the <code>head</code> as well:
 
 <pre><code>    function serve(id) {
-<b>        res.write(preamble.replace('$title', 'Blog - ' + posts[id].title);</b>
-        res.write(posts[id].content || 'Post not found');
+        if (posts[id]) {
+<b>            res.write(preamble.replace('$title', 'Blog - ' + posts[id].title);</b>
+            res.write(posts[id].content || 'Post not found');
+            res.end(postscript(id));
 </code></pre>
 
-<p>This, of course, requires that <code>preamble.html</code> has:
+<p>This, of course, requires that <code>preamble.html</code> starts with:
 
 <pre><code>&lt;meta charset='utf-8'&gt;
 <b>&lt;title&gt;$title&lt;/title&gt;</b>
