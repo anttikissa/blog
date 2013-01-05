@@ -18,8 +18,7 @@ shortcomings.
 every second.  This will give us some downtime, but it's more than acceptable
 during development.  This goes to the end of <code>server/run.js</code>:
 
-<pre><code>...
-server.listen(3000);
+<pre><code>server.listen(3000);
 
 <b>setTimeout(function() { process.exit(0); }, 1000);</b>
 </code></pre>
@@ -123,7 +122,7 @@ Lists and blockquotes demand some indentation; we use multiples of the base unit
         margin: 22px 44px;
     }
     ol, ul {
-        padding: 0 44px;
+        padding: 0 0 0 44px;
     }
 </code></pre>
 
@@ -221,12 +220,11 @@ we'll stop this madness right here.)
 <h2>Exercises</h2>
 
 <ul>
-	<li><p>Measure the downtime of the blog by printing out the time (as reported
+	<li>Measure the downtime of the blog by printing out the time (as reported
 	by, for example, <code>new Date().getTime()</code> just before restarting
 	the server and just after <code>server.listen()</code>.  Alternatively,
-	reload the site in the browser until you get a feel for how often it fails.
-
-	<p>Is the downtime acceptable?  Come up with ways to make it smaller.  How
+	reload the site in the browser until you get a feel for how often it fails.  
+	Is the downtime acceptable?  Come up with ways to make it smaller.  How
 	could we avoid downtime altogether?
 
 	<li>Learn all about web design and typography. Read <a
@@ -244,7 +242,7 @@ we'll stop this madness right here.)
 	href='http://www.netmagazine.com/features/better-web-typography-few-simple-steps'>this</a>.
 	Scourge some inspiration sites like <a
 	href='http://spyrestudios.com/blog-designs-with-killer-typography/'>this</a>.
-	Come up with a nice design.  Implement it.
+	<li>Come up with a nice design.  Implement it.
 
 </ul>
 
