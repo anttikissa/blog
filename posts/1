@@ -3,23 +3,38 @@
 
 <p>So, let's make a blog from scratch in Node.js.
 
-<p>We start with the simplest possible solution.  We serve a single post at a
-time.  Posts are authored in HTML with a text editor and put in the directory
-<code>posts/</code>.  The filename of a post is also its id, which is a natural
-number; this post is the first one and has the id <code>1</code>.
+<h2>Underlying philosophy</h2>
+
+We'll do everything as quickly and simply as possible, without resorting to ugly
+hacks (to some extent, at least).  The implementation is intended to be both
+educational and practical.  Therefore, I've made the conscious decision of
+avoiding external modules where possible.  That means we'll reinvent the wheel a
+couple of times.  The reader is encouraged to do the same, or to find out how to
+use previously invented wheels instead.
+
+<h2>So, let's get started.</h2>
+
+<p>Here's a spec for our starting point, a minimal blog app:
+
+<p>We serve a single post at a time.  Posts are authored in HTML with a text
+editor and placed in directory <code>posts/</code>.  The filename of a post is
+also its id, which is a natural number; the post you are reading is the first
+one and has the id <code>1</code>.
 
 <p>At <code>http://localhost:3000/</code>, the server gives you the latest post.
 You can view individual posts at <code>http://localhost:3000/&lt;id&gt;</code>.
 
 <p>The server will reside in <code>server/run.js</code>. We'll make it a runnable
-script by making it executable and starting it with:
+script by making it executable (<code>chmod +x server/run.sh</code>) and
+putting the following snippet as its first line:
 
 <pre><code>#!/usr/bin/env node
 </code></pre>
 
-<p>Now to start the server, we'll just say <code>server/run.js</code>.
+<p>Now to start the server, we'll just say <code>server/run.js</code>.  (Try it!
+Though don't expect it to do anything.)
 
-<p>We need two modules: <code>http</code> for serving the posts; and
+<p>We need just two modules: <code>http</code> for serving the posts; and
 <code>fs</code> for reading the posts from disk.
 
 <pre><code>var http = require('http');
@@ -49,7 +64,8 @@ var latestPostId = postIds[postIds.length - 1];
 </code></pre>
 
 <p>Post contents are stored in an object whose keys are the post ids.  We use <code>Object.create(null)</code> to create an object with a
-null prototype instead of <code>{}</code> to avoid hypothetical problems with posts whose id is e.g. <code>hasOwnProperty</code>. (Read all about it at <a
+null prototype instead of <code>{}</code> to avoid problems with posts whose id
+is e.g. <code>hasOwnProperty</code>. (Read all about it at <a
 href="http://www.devthought.com/2012/01/18/an-object-is-not-a-hash/">"An object
 is not a hash"</a>.)
 
@@ -62,18 +78,18 @@ is not a hash"</a>.)
 });
 </code></pre>
 
-<p>Our server is a function called <code>listener</code> that takes a <a
+<p>Our server is a function called <code>listener</code>.  It takes a <a
 href='http://nodejs.org/api/http.html#http_class_http_serverrequest'>http.ServerRequest</a>
 and a <a
-href='http://nodejs.org/api/http.html#http_class_http_serverresponse'>http.ServerResponse</a>.
+href='http://nodejs.org/api/http.html#http_class_http_serverresponse'>http.ServerResponse</a> as arguments.
 
 <p>It first checks whether we have valid URL.  The following <a
-href='https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/RegExp'>RegExp</a>
+href='https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/RegExp'>regular expression</a>
 expects a <code>/</code> followed by either a number or an empty string,
 capturing the string following the <code>/</code> into <code>match[1]</code>.
 
 <pre><code>function listener(req, res) {
-    var match = req.url.match(/^\/(\d+|)$/);
+    var match = req.url.match(/^\/(\d*)$/);
 </code></pre>
 
 <p>If the match succeeds, we serve the post (if a post id was specified)
@@ -88,19 +104,25 @@ or the latest post (if it wasn't).  Otherwise, we report an error.
     }
 </code></pre>
 
-<p>The <code>serve</code> function first writes a preamble, then the post itself (if found), and finally a postscript.
+<p>The <code>serve</code> function first writes a preamble, then the post
+itself, and finally a postscript. If the post is invalid, it returns a 404.
 
 <pre><code>    function serve(id) {
-        res.write(preamble);
-        res.write(posts[id] || 'Post not found');
-        res.end(postscript(id));
+        if (posts[id]) {
+            res.write(preamble);
+            res.write(posts[id]);
+            res.end(postscript(id));
+        } else {
+            res.writeHead(404);
+            res.end("Not found");
+        }
     }
 }
 </code></pre>
 
 <p>The preamble will eventually consist of <code>&lt;head&gt;</code> part of
 the HTML document: scripts, styles, etc.  It is easiest to put in a separate
-file, which is loaded at startup.  At first, in our exhilarated anticipation
+file, which is loaded at startup.  For now, in our exhilarated anticipation
 towards getting the thing up and running, we'll tolerate the absence of this
 file.  Even so, let's produce standards-compliant HTML.
 
@@ -136,12 +158,23 @@ easily.
 <pre><code>var server = http.createServer(listener);
 server.listen(3000);</code></pre>
 
-<p>Voil&agrave; &ndash; a working node.js blog engine in roughly 50 lines.
-(The code is at <a href='http://github.com/anttisykari/blog'>GitHub</a>.)
+<p>Voil&agrave; &ndash; a working node.js blog engine in roughly 50 lines of
+code.  (The code is at <a href='http://github.com/anttisykari/blog'>GitHub</a>.)
 
 <p>Here's how it looks like &ndash; not very pretty, but it's a start.
 
 <img alt='' src='http://cl.ly/image/15070M1B3n1t/Screen%20Shot%202012-12-16%20at%202.58.41%20PM.png'>
+
+<h2>Exercises</h2>
+
+<ul>
+	<li>Find out the difference between synchronous methods (such as <code>fs.readFileSync</code>)
+	and asynchronous ones (<code>fs.readFile</code>).  Node.js usually
+	encourages you to use the asynchronous ones.  Why?
+	<li>Find out what <code>__dirname</code> is and why you should use it.
+	Learn about the <code>path</code> module and why you might want to user
+	<code>path.join</code> instead of just concatenating strings.
+</ul>
 
 <p>Now, how can we make it better?
 

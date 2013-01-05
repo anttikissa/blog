@@ -13,7 +13,7 @@ log("Server starting, env: " + env);
 
 var filenames = fs.readdirSync(__dirname + "/../posts");
 var postIds = filenames.filter(function(filename) {
-	return filename.match(/^\d+$/);
+	return filename.match(/^\d*/);
 });
 
 postIds.sort(function(a, b) { return Number(a) - Number(b); });
@@ -67,9 +67,14 @@ function listener(req, res) {
 	}
 
 	function serve(id) {
-		res.write(preamble.replace('$title', 'Blog - ' + posts[id].title));
-		res.write(posts[id].content || 'Post not found');
-		res.end(postscript(id));
+		if (posts[id]) {
+			res.write(preamble.replace('$title', 'Blog - ' + posts[id].title));
+			res.write(posts[id].content || 'Post not found');
+			res.end(postscript(id));
+		} else {
+			res.writeHead(404);
+			res.end("Not found");
+		}
 	}
 
 	function servePosts() {
