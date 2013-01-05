@@ -118,6 +118,9 @@ server.listen(3000);
 log("Listening at port 3000.");
 
 if (env == 'dev') {
-	setTimeout(function() { process.exit(0); }, 1000);
+	setTimeout(function() {
+		log("Restarting...");
+		process.exit(0);
+	}, 1000);
 }
 

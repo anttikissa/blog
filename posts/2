@@ -12,6 +12,8 @@ shortcomings.
 <li>and it's not possible to insert other than text content (without resorting to third-party services).
 </ol>
 
+<p>In this session, we'll solve (1) and (2).
+
 <p>For (1), let's do a quick and dirty fix and restart the server
 every second.  This will give us some downtime, but it's more than acceptable
 during development.  This goes to the end of <code>server/run.js</code>:
@@ -215,5 +217,35 @@ we'll stop this madness right here.)
 <p>There &ndash; looks nicer now.
 
 <p><img alt='' src='http://f.cl.ly/items/3i0J0e0v1C1S3U2j2A22/Screen%20Shot%202012-12-21%20at%2012.13.38%20PM.png'>
+
+<h2>Exercises</h2>
+
+<ul>
+	<li><p>Measure the downtime of the blog by printing out the time (as reported
+	by, for example, <code>new Date().getTime()</code> just before restarting
+	the server and just after <code>server.listen()</code>.  Alternatively,
+	reload the site in the browser until you get a feel for how often it fails.
+
+	<p>Is the downtime acceptable?  Come up with ways to make it smaller.  How
+	could we avoid downtime altogether?
+
+	<li>Learn all about web design and typography. Read <a
+	href='http://www.kaikkonendesign.fi/typography/'>Interactive Guide to Blog
+	Typography</a>; articles at <a
+	href='http://www.alistapart.com/topics/topic/typography/'>A List Apart</a>;
+	<a href='http://www.webtypography.net/'>The Elements of Typographic Style
+	Applied to the Web</a> (eventually, you'll want to read Bringhurst's <a
+	href='http://www.amazon.com/dp/product/088179211X/?tag=anttsyka-20'>book</a>
+	as well); stuff like <a
+	href='http://www.slideshare.net/jeff_croft/elegant-web-typography-presentation'>this</a>
+	and <a
+	href='http://typecast.com/blog/4-simple-steps-to-vertical-rhythm'>this</a>
+	and <a
+	href='http://www.netmagazine.com/features/better-web-typography-few-simple-steps'>this</a>.
+	Scourge some inspiration sites like <a
+	href='http://spyrestudios.com/blog-designs-with-killer-typography/'>this</a>.
+	Come up with a nice design.  Implement it.
+
+</ul>
 
 <p>But how can we make it better?
