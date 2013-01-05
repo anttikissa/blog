@@ -9,9 +9,7 @@ at <code>blog.sykari.net</code>.  It's a Linux box running Ubuntu 12.04 LTS
 &ndash; mine is running in my kitchen, but you could basically get a similar one
 from Amazon EC2 or any other run-of-the mill provider.  We won't cover the setup
 procedure in exact detail.  Nor do we cover acquiring the domain name or setting
-up DNS. (I got my domain from <a
-href='http://nearlyfreespeech.net/'>NearlyFreeSpeech.net</a>, and DNS
-from <a href='http://zerigo.com/'>Zerigo</a>.)
+up DNS. (See <a href='#exercises'>exercises</a> for that.)
 
 <p>The assumption is that we have a recent <a href='http://nginx.org/'>nginx</a>
 running on the server and <a href='http://nodejs.org/'>node.js</a> >= 0.8.16
@@ -219,8 +217,9 @@ while true; do
 done
 </code></pre>
 
-<p>The <code>sleep 1</code> is there to prevent the script from spinning
-indefinitely, if the server fails to start for some reason.
+<p>The <code>sleep 1</code> is there to prevent the script from restarting
+continuously and hogging all the CPU, if the server fails to start for some
+reason.
 
 <p>Now the only thing left is to change <code>deploy/blog.conf</code> to use
 <code>prod-run.sh</code> instead of <code>run.sh</code> and redeploy.
@@ -236,7 +235,15 @@ env PIDFILE=/var/run/blog.pid
 2012-12-21 13:33:02.457 Listening at port 3000.
 </code></pre>
 
+<h2 id='exercises'>Exercises</h2>
 
+<ul>
+	<li>Research yourself a good domain name registrar.  (Marco Arment <a href='http://www.marco.org/2011/04/14/why-is-it-so-hard-to-be-a-good-registrar'>mentions</a> three: Namecheap, Hover, and Gandi.  I heartily recommend <a href='https://www.nearlyfreespeech.net/'>nearlyfreespeech.net</a>.) 
+	<li>See where you can get a cheap virtual server on the web.  (The last time I checked, Amazon gave you a free micro instance for a year.)  Install nginx and Node.js.
+	<li>Find out all about managing a DNS server.  Pick a provider.  (<a href='http://www.zerigo.com/managed-dns/pricing'>Zerigo</a> has a free plan for less than 50000 monthly queries.)
+	<li>Publish your own blog!
+	<li>Come up with ways to make the deploy script better.  What should it do if a deployment fails?  Should you be able to easily roll back to an earlier version?  Do you care about downtime caused by deployments?
+	<li>Make the upstart script send you email if the blog crashes for some reason.  Test it.  Will it fill your inbox if it starts crashing continuously?
+</ul>
 <p>But how could we make it better?
-
 
