@@ -62,8 +62,22 @@ function listener(req, res) {
 	} else if (req.url == '/posts') {
 		servePosts();
 	} else {
-		res.writeHead(404);
-		res.end("Not found");
+		fs.readFile(__dirname + '/../public/' + req.url,
+			function(err, data) {
+				if (err) {
+//					console.log(err);
+					res.writeHead(404);
+					res.end("Not found");
+				} else {
+					var filetype = 'text/plain';
+					if (req.url.match(/\.png$/)) {
+						filetype = 'image/png';
+					}
+
+					res.writeHead(200);
+					res.end(data);
+				}
+		 	});
 	}
 
 	function serve(id) {
