@@ -1,4 +1,4 @@
-<h1>Fixing the small things</h1>
+<h1>Fixing some of the small things</h1>
 <time datetime='2012-12-29T13:22:35.244Z'></time>
 
 <p>There are a couple of things we'd like to fix.
@@ -155,30 +155,14 @@ code to the <code>listener</code> function:
 Now we get a nice list of all posts at <a href='/posts'>/posts</a>, although
 we must know how to navigate there by ourselves.  
 
-<h2>Change styling of subheadings to look more distinctive</h2>
+<h2>What's next?</h2>
 
-<p>Now that I started to write this post, I noticed that subheadings
-(<code>&lt;h2&gt;</code>) look the same as headings (<code>&lt;h2&gt;</code>).
-Let's make them look like <em>this</em>.  In <code>preamble.html</code>, we add
-some styling to <code>h2</code> and give it some margin as well:
-
-<pre><code>        font-size: 16px;
-    }
-<b>    h2 {
-        font-weight: normal;
-        font-style: italic;
-    }
-    h1, h2, p, ul, ol, pre, footer {</b>
-        margin: 22px 0;
-    }
-</code></pre>
-
-<h2>Make authoring easier</h2>
-
-...
+In the next part of this walkthrough, we'll make authoring the posts somewhat
+easier.
 
 <h2>Exercises</h2>
 
 <ul>
 <li>Add link to <code>/posts</code> to a suitable place.
 </ul>
+
