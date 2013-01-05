@@ -1,7 +1,7 @@
-<h1>Fixing some of the small things</h1>
+<h1>Fixing the small things</h1>
 <time datetime='2012-12-29T13:22:35.244Z'></time>
 
-<p>There are a couple of things we'd like to fix.
+<p>There are a couple of things that demand our attention:
 
 <h2>Adding interesting metadata to posts</h2>
 
@@ -116,6 +116,18 @@ as it will be needed shortly later):
         title: title,
         content: content<b>,
         date: date</b>
+    }
+</code></pre>
+
+<p>We also add some CSS for the date immediately following the title, to make it
+appear next to it:
+
+<pre><code>    h1 + time {
+        margin-top: -22px;
+        display: block;
+        font-size: 14px;
+        font-variant: small-caps;
+        letter-spacing: 1px;
     }
 </code></pre>
 
