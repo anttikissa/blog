@@ -2,6 +2,7 @@
 
 var http = require('http');
 var fs = require('fs');
+var mk = require('../lib/mk');
 
 var env = process.env.BLOG_ENV == 'dev' ? 'dev' : 'prod'
 
@@ -12,17 +13,25 @@ function log(message) {
 log("Server starting, env: " + env);
 
 var filenames = fs.readdirSync(__dirname + "/../posts");
-var postIds = filenames.filter(function(filename) {
-	return filename.match(/^\d*/);
+
+var postFiles = filenames.filter(function(filename) {
+	return filename.match(/^\d+(\.txt)?$/);
+}).map(function(filename) {
+	var match = filename.match(/^(\d+)(\.txt)?$/);
+	return {
+		id: match[1],
+		filename: filename,
+		type: match[2] == '.txt' ? 'mk' : 'html'
+	};
 });
 
-postIds.sort(function(a, b) { return Number(a) - Number(b); });
-var latestPostId = postIds[postIds.length - 1];
+postFiles.sort(function(a, b) { return Number(a.id) - Number(b.id); });
+var latestPostId = postFiles[postFiles.length - 1].id;
 
 var posts = Object.create(null);
 
-postIds.forEach(function(id) {
-	posts[id] = readPost(id);
+postFiles.forEach(function(postFile) {
+	posts[postFile.id] = readPost(postFile.filename, postFile.type);
 });
 
 function formatDate(date) {
@@ -34,8 +43,17 @@ function formatDate(date) {
 	return months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
 }
 
-function readPost(id) {
-	var content = fs.readFileSync(__dirname + "/../posts/" + id, "utf-8");
+function filter(post, type) {
+	if (type == 'mk') {
+		return mk(post);
+	} else {
+		return post;
+	}
+}
+
+function readPost(filename, type) {
+	var content = fs.readFileSync(__dirname + "/../posts/" + filename, "utf-8");
+	content = filter(content, type);
 	var titleMatch = content.match(/<h1>([^<]*)<\/h1>/);
 	var title = titleMatch ? titleMatch[1] : "no title";
 	var datePattern = /<time[^>]*datetime='([^\']*)'[^>]*>/;
@@ -55,7 +73,7 @@ function readPost(id) {
 
 function listener(req, res) {
 	console.log(req.url);
-	var match = req.url.match(/^\/(\d+|)$/);
+	var match = req.url.match(/^\/(\d*)$/);
 	if (match) {
 		res.writeHead(200, { 'Content-Type': 'text/html' });
 		serve(match[1] || latestPostId);
@@ -65,7 +83,6 @@ function listener(req, res) {
 		fs.readFile(__dirname + '/../public/' + req.url,
 			function(err, data) {
 				if (err) {
-//					console.log(err);
 					res.writeHead(404);
 					res.end("Not found");
 				} else {

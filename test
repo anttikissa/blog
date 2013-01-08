@@ -1,0 +1,115 @@
+#!/usr/bin/env node
+
+assert = {
+	is: function is(lhs, rhs) {
+		if (lhs !== rhs) {
+			error('Got "' + lhs + '",\nExpected:  "' + rhs + '"');
+		}
+	},
+	eq: function(lhs, rhs) {
+		lhsS = JSON.stringify(lhs);
+		rhsS = JSON.stringify(rhs);
+		if (lhsS !== rhsS) {
+			error('Got "' + lhsS + '",\nExpected:  "' + rhsS + '"');
+		}
+	}
+} 
+
+function error(msg) {
+	console.log("Error: " + msg);
+	Error.prepareStackTrace = function(e, stackTrace) {
+		return stackTrace;
+	};
+	var err = new Error();
+
+	var callSite = err.stack[2];
+	var filename = callSite.getFileName();
+	var file = require('fs').readFileSync(filename, 'utf8');
+	var relative = require('path').relative(process.cwd(), filename);
+	var line = callSite.getLineNumber();
+	var column = callSite.getColumnNumber();
+
+	console.log("\nFile: " + relative);
+	console.log("Line: " + line);
+	console.log("\n" + file.split('\n')[line-1].replace(/\t/g, ' '));
+	console.log(Array(column).join(' ') + "^");
+	err.stack.splice(0, 2);
+	console.log("\n" + err.stack.join('\n'));
+	process.exit(1);
+}
+
+assert.is(1 + 2, 3);
+assert.is(1 + 2, 4);
+
+//			console.log("lhs " + new Buffer(lhs).toString('hex'));
+//			console.log("rhs " + new Buffer(rhs).toString('hex'));
+
+
+/*
+	eq: function(lhs, rhs) {
+		lhsS = JSON.stringify(lhs);
+		rhsS = JSON.stringify(rhs);
+		if (lhsS !== rhsS) {
+			throw new Error('Got "' + lhsS + '",\nExpected:  "' + rhsS + '"');
+		}
+	}
+*/
+
+var mk = require('./lib/mk');
+
+assert.is(mk.trim('a\n  \nb'), 'a\n\nb');
+assert.is(mk.trim('foo\n  \n  bar  \n\t\nzot'), 'foo\n\n  bar  \n\nzot');
+assert.is(mk.trim('\n\nfoo\n\n\n'), 'foo');
+assert.is(mk.trim('one\n   \ntwo\t  \n \t\f\r\nthree \n\n '), 'one\n\ntwo\t  \n\nthree ');
+
+assert.is(mk.untabify('\t'), '    ');
+assert.is(mk.untabify(' \t'), '    ');
+assert.is(mk.untabify('  \t'), '    ');
+assert.is(mk.untabify('   \t'), '    ');
+assert.is(mk.untabify('    \t'), '        ');
+assert.is(mk.untabify('\tbar'), '    bar');
+assert.is(mk.untabify('*\tbar'), '*   bar');
+assert.is(mk.untabify(' *\t two'), ' *   two');
+assert.is(mk.untabify(' *\t\t three'), ' *       three');
+assert.is(mk.untabify('\t1\t2\n  \t\t zot\t'), '    1   2\n         zot    ');
+
+assert.eq(mk.split('one\ntwo\n\nthree\n\n\nfour'), ['one\ntwo', 'three', 'four']);
+
+assert.is(mk.type('Hello world!'), 'paragraph');
+assert.is(mk.type('# foo'), 'heading');
+assert.is(mk.type(' # foo'), 'paragraph');
+assert.is(mk.type('###### foo'), 'heading');
+assert.is(mk.type('####### foo'), 'paragraph');
+assert.is(mk.type('    foo'), 'codeBlock');
+assert.is(mk.type('   foo'), 'paragraph');
+assert.is(mk.type('*   foo'), 'codeBlock');
+assert.is(mk.type('*  foo'), 'ul');
+assert.is(mk.type('* list'), 'ul');
+assert.is(mk.type('*list'), 'paragraph');
+assert.is(mk.type('#. list'), 'ol');
+assert.is(mk.type('#.list'), 'paragraph');
+assert.is(mk.type('> text'), 'blockquote');
+assert.is(mk.type('>text'), 'paragraph');
+assert.is(mk.type('<ins>text</ins>'), 'html');
+assert.is(mk.type(' <ins>text</ins>'), 'html');
+assert.is(mk.type('A <ins>text</ins>'), 'paragraph');
+assert.is(mk.type('* <ins>text</ins>'), 'ul');
+
+assert.is(mk.handle('This is a paragraph.'), '<p>This is a paragraph.');
+assert.is(mk.handle('A two-line\nparagraph.'), '<p>A two-line\nparagraph.');
+
+assert.is(mk.handle('# Title'), '<h1>Title</h1>');
+assert.is(mk.handle('###### Subsubsubsubsubtitle'), '<h6>Subsubsubsubsubtitle</h6>');
+assert.is(mk.handle('####### Subsubsubsubsubtitle'), '<p>####### Subsubsubsubsubtitle');
+assert.is(mk.handle('    while (true)\n        repeat();'), '<pre><code>while (true)\n    repeat();</code></pre>');
+assert.is(mk.handle('    while (true)\n*       repeat();'), '<pre><code>while (true)\n<b>    repeat();</b></code></pre>');
+assert.is(mk.handle('    <!doctype html>\n    <html>&c.</html>'), '<pre><code>&lt;!doctype html&gt;\n&lt;html&gt;&amp;c.&lt;/html&gt;</code></pre>');
+
+assert.is(mk.handle('* foo\n* bar'), '<ul>\n<li>foo\n<li>bar\n</ul>');
+assert.is(mk.handle('#. foo\n#. bar'), '<ol>\n<li>foo\n<li>bar\n</ol>');
+
+assert.is(mk.handle('<hr>'), '<hr>');
+
+assert.is(mk.handle('> First line\n> another one.'), '<blockquote><p>First line\nanother one.\n</blockquote>');
+assert.is(mk.handle('> First paragraph\n> inside a blockquote.\n> \n> Second.'), '<blockquote><p>First paragraph\ninside a blockquote.\n<p>Second.\n</blockquote>');
+
