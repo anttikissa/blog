@@ -264,17 +264,18 @@ Lastly, we print the stack trace (starting from index 2) and exit.
 
 The end result is now much more informative:
 
-% ./test
-Error: Got "3",
-Expected:  "4"
+	% ./test
+	Error: Got "3",
+	Expected:  "4"
 
-File: test
-Line: 41
+	File: test
+	Line: 41
 
-assert.is(1 + 2, 4);
-       ^
+	assert.is(1 + 2, 4);
+		   ^
 
-Object.<anonymous> (/Users/antti/work/blog/test:42:8)
+	Object.<anonymous> (/Users/antti/work/blog/test:42:8)
+	...
 
 The `error` function is forced to reimplement much of the existing Node.js error
 reporting code, since instead of the boring old `new Error(...)`, we wanted to
@@ -388,9 +389,9 @@ checks for deep equality, and then use it:
 `split` breaks the paragraph (or similar top-level element) whenever it sees
 two or more consecutive newlines:
 
-function split(text) {
-	return text.split(/\n{2,}/);
-}
+	function split(text) {
+		return text.split(/\n{2,}/);
+	}
 
 Now we have a list of top-level elements whose types we need to figure out:
 paragraph, heading, raw html element, code block, unordered and ordered lists,
@@ -399,6 +400,7 @@ and blockquotes.
 It's time to find out the type of a block.  First, the tests:
 
 `test`:
+
 	assert.is(mk.type('# foo'), 'heading');
 	assert.is(mk.type(' # foo'), 'paragraph');
 	assert.is(mk.type('###### foo'), 'heading');
@@ -424,25 +426,25 @@ first line -- we like to be as strict as possible to enforce consistent
 formatting of the source file, but not at the expense of implementation
 complexity.  Element types that are not recognized are assumed to be paragraphs. 
 
-function type(element) {
-	if (/^#{1,6} /.test(element)) {
-		return 'heading';
-	} else if (/^    /.test(element)) {
-		return 'codeBlock';
-	} else if (/^\*   /.test(element)) {
-		return 'codeBlock';
-	} else if (/^\* /.test(element)) {
-		return 'ul';
-	} else if (/^\#\. /.test(element)) {
-		return 'ol';
-	} else if (/^> /.test(element)) {
-		return 'blockquote';
-	} else if (/^\s*</.test(element)) {
-		return 'html';
-	} else {
-		return 'paragraph';
+	function type(element) {
+		if (/^#{1,6} /.test(element)) {
+			return 'heading';
+		} else if (/^    /.test(element)) {
+			return 'codeBlock';
+		} else if (/^\*   /.test(element)) {
+			return 'codeBlock';
+		} else if (/^\* /.test(element)) {
+			return 'ul';
+		} else if (/^\#\. /.test(element)) {
+			return 'ol';
+		} else if (/^> /.test(element)) {
+			return 'blockquote';
+		} else if (/^\s*</.test(element)) {
+			return 'html';
+		} else {
+			return 'paragraph';
+		}
 	}
-}
 
 Then it's time to implement the handling of element types.  That is done by the
 function `handle` (`lib/mk.js`):
@@ -466,19 +468,21 @@ function `handle` (`lib/mk.js`):
 We'll start by implementing paragraphs, which are quite straightforward:
 
 `test`:
-	assert.is(mk.handle('This is a paragraph.'), '<p>This is a paragraph.');
-	assert.is(mk.handle('A two-line\nparagraph.'), '<p>A two-line\nparagraph.');
+
+		assert.is(mk.handle('This is a paragraph.'), '<p>This is a paragraph.');
+		assert.is(mk.handle('A two-line\nparagraph.'), '<p>A two-line\nparagraph.');
 
 `lib/mk.js`:
+
 	paragraph: function(element) {
 		return "<p>" + element;
 	},
 
 ## Headings
 
-assert.is(mk.handle('# Title'), '<h1>Title</h1>');
-assert.is(mk.handle('###### Subsubsubsubsubtitle'), '<h6>Subsubsubsubsubtitle</h6>');
-assert.is(mk.handle('####### Subsubsubsubsubtitle'), '<p>####### Subsubsubsubsubtitle');
+	assert.is(mk.handle('# Title'), '<h1>Title</h1>');
+	assert.is(mk.handle('###### Subsubsubsubsubtitle'), '<h6>Subsubsubsubsubtitle</h6>');
+	assert.is(mk.handle('####### Subsubsubsubsubtitle'), '<p>####### Subsubsubsubsubtitle');
 
 For now, the inline translations (italics, bold, links and inline code quotes)
 are not performed.  We'll test and implement them later.
@@ -501,7 +505,7 @@ Headings are handled by simply wrapping the content inside a `<hN>` tag, where
 	assert.is(mk.handle('    <!doctype html>\n    <html>&c.</html>'), '<pre><code>&lt;!doctype html&gt;\n&lt;html&gt;&amp;c.&lt;/html&gt;</code></pre>');
 
 Code blocks require a bit more logic because we want to boldface the lines
-beginning with `\s`:
+beginning with `*`:
 
 		codeBlock: function(element) {
 			var lines = element.split('\n');
@@ -535,7 +539,7 @@ The implementation requires two helper functions that do the work:
 	}
 
 	function list(type, prefix, element) {
-		result = "<" + type + ">\n";
+		var result = "<" + type + ">\n";
 		element.split('\n').forEach(function(item) {
 			result += li(item, prefix) + '\n';
 		});
@@ -586,17 +590,209 @@ join them with newlines.
 *		return converted.join('\n') + '\n';
 	}
 
-That done, we can implement `blockquote`:
+After that, we can implement `blockquote`:
 
 	blockquote: function(element) {
 		var stripped = element.replace(/^> /gm, '');
 		return "<blockquote>" + mk(stripped) + "</blockquote>";
 	}
 
-..
+## Inline elements
+ 
+Now that the high-level structure is in place, we turn to look at the inline
+elements.  That seem to be basically two environments to take care of: inside
+`<code>` elements, where we want to escape pretty much everything, and
+elsewhere (except inside HTML elements), where we want to translate our own
+markup and escape HTML entities
+
+(Or at least some of them: at this point it begins to fade to me that we need
+to so some "smart" HTML recognition here; we want to escape the ampersand in
+`Smith & Jones` but not the ampersand in `&copy;` and we want to escape the
+inequality signs brackets in `if value < a but a > 0`, but not in `<a
+href='#'>link text a</a>`.)
+
+We forget this sidetrack for a moment and implement `filter` and `filterCode`
+in `lib/mk.js` with straightforward ones:
+
+	function filter(text) {
+		return escape(text);
+	}
+
+	function filterCode(text) {
+		return escape(text);
+	}
+
+We add some tests we expect to pass:
+
+	assert.is(mk.filterCode("<h1 class='foo'>One & two</h1>"), "&lt;h1 class=&#039;foo&#039;&gt;One &amp; two&lt;/h1&gt;");
+	assert.is(mk.filter('X & Y'), 'X &amp; Y');
+	assert.is(mk.filter('a < b'), 'a &lt; b');
+
+And others that won't pass yet, so we'll comment them out and revisit the
+problem later:
+
+	//assert.is(mk.filter('yes &ndash; no &amp; &'), 'yes &ndash; no &amp; &amp;');
+	//assert.is(mk.filter("0 <a href='/get?x=1&y=2'>link</a>"), "0 <a href='/get?x=1&amp;y=2'>link</a>");
+
+Then we'll start using `filter` and `filterCode` in the proper places (`lib/mk.js`:)
+
+	function li(item, prefix) {
+		var content = item.replace(prefix, '');
+*		return "<li>" + filter(content);
+	}
+
+	...
+
+	var handlers = {
+		paragraph: function(element) {
+*			return "<p>" + filter(element);
+		},
+		heading: function(element) {
+			...
+*			var content = filter(match[2]);
+			return "<h" + level + ">" + content + "</h" + level + ">";
+		},
+		codeBlock: function(element) {
+			...
+				if (match[1] == '*') {
+*					return "<b>" + filterCode(match[2]) + "</b>";
+				} else {
+*					return filterCode(match[2]);
+				}
+
+Next, we define functions for detecting and translating different kinds of
+formatting:
+
+	function codify(text) {
+	}
+
+	function italicize(text) {
+	}
+
+	function boldify(text) {
+	}
+
+	function linkify(text) {
+	}
+
+To implement `filter`, we expect these functions to be called in sequence.  But
+let's first test them in separately:
+
+	assert.is(mk.codify('a `span` of `<code>`'), 'a <code>span</code> of <code>&lt;code&gt;</code>');
+	assert.is(mk.codify('`a && b << 2 + ""`'), '<code>a &amp;&amp; b &lt;&lt; 2 + &quot;&quot;</code>');
+
+## Codify
+
+To `codify`, we split the string into parts by `\`` and wrap every other part in
+`<code>`:
+
+	function codify(text) {
+		var parts = text.split('`');
+		return parts.map(function(part, i) {
+			if (i % 2) {
+				return '<code>' + filterCode(part) + '</code>';
+			} else {
+				return part;
+			}
+		}).join('');
+	}
+
+## Italicize
+
+(Warning: this section is a bit heavy on regular expressions.  Take a deep
+breath.)
+
+To italicize, we must first decide how to an `/italic/` block can start and how
+it can end.  We want the slashes to work outside words:
+
+	assert.is(mk.italicize('Its /italic/.'), 'Its <i>italic</i>.');
+
+We check that a sequence of italics work:
+
+	assert.is(mk.italicize('/a/ /b/ /c/ /d/'), '<i>a</i> <i>b</i> <i>c</i> <i>d</i>');
+
+Also inside parentheses (and outside, even though that's against the
+typographical convention):
+
+	assert.is(mk.italicize('(/This, too/.)'), '(<i>This, too</i>.)');
+	assert.is(mk.italicize('/(This, too.)/'), '<i>(This, too.)</i>');
+
+Slashes inside italicized blocks need to be allowed, and a standalone slash
+should be inert:
+
+	assert.is(mk.italicize('This is /A/B testing/!'), 'This is <i>A/B testing</i>!');
+	assert.is(mk.italicize('This is not: and/or/something'), 'This is not: and/or/something');
+	assert.is(mk.italicize('1 / 2 * 3 / 4 + /a / b / c/.'), '1 / 2 * 3 / 4 + <i>a / b / c</i>.');
+
+Another test to check that it starting and ending slash works:
+
+	assert.is(mk.italicize('/Italic/ starts, /in middle/, /ends/'), '<i>Italic</i> starts, <i>in middle</i>, <i>ends</i>');
+
+It seems that what we want is to find a slash following something else than a
+word character and then for a slash preceding something else than a word
+character. 
+
+Finding and replacing these one at a time with a regular expression will
+probably get things done quickly and easily enough.  So let's start with that.
+
+Since JavaScript regular expressions have the handy `\B` shorthand for matching
+non-word boundaries, we'll use them:
+
+	function italicize(text) {
+		var pattern = /\B\/(.*)\/\B/g;
+		return text.replace(pattern, '<i>$1</i>');
+	}
+
+This gets us through until `/a/ /b/ /c/ /d/`, which gets translated to `<i>a/
+<i>b/ /c</i> /d</i>`.  Oops, we needed to use the _non-greedy matcher_
+(https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Regular_Expressions#Using_Special_Characters)
+to prevent the whole string from being matched at once:
+
+		var pattern = /\B\/(.*?)\/\B/g;
+
+This lets us through a couple of tests, but now we have the problem of at `1 / 2
+* 3 / 4` turning into `1 <i> 2 * 3 </i> 4`.  So we'd like to prevent slashes
+surrounded by white space to be not matched.  In fact, it's easier to follow a
+simpler and stricter polict: a slash /followed/ by white space cannot be matched
+(as the start slash).  This prevents `/ something/` from being matched, but then
+again, if that /should/ be matched, why wouldn't ` / something/`?  Sometimes
+strictness is just good.
+
+We'll use a /negated lookahead/ pattern `(?!\s)` after the initial character
+(which just means that match `/` only if not followed by `\s`:
+
+		var pattern = /\B\/(?!\s)(.*?)\/\B/g;
+
+The ending slash follows a similar rule in the other direction: white space may
+not precede it.
+
+		var pattern = /\B\/(?!\s)(.*?[^\s])\/\B/g;
+
+As a side effect, `//` is not translated to `<i></i>` any more, since the
+pattern now requires at least one (non-space) character in between the slashes.
+We add that to the tests.
+
+	assert.is(mk.italicize('A // comment?'), 'A // comment?');
+
+Finally, all tests pass and we can give this minor monstrosity the permission to
+get to work.  At least until some brave maintenance programmer comes digging.
+(That might be sooner than expected; I suspect that the italicization might have
+trouble with existing HTML end tags.)
+
+## Boldify
+
+## Linkify
+
+## Tying it all together
+
+TODO combining them all -- problems: 
+
+* all make ending tags like (</code>) that cause problems with italicize
 
 ## Exercises 
 
 * Make sure that the tests are run in production as well. Is this a good idea
 to do during the deployment, or whenever the server is started?
+
+* Test that `filter` and `filterCode` are used where they should be.
 

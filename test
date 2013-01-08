@@ -39,21 +39,6 @@ function error(msg) {
 }
 
 assert.is(1 + 2, 3);
-assert.is(1 + 2, 4);
-
-//			console.log("lhs " + new Buffer(lhs).toString('hex'));
-//			console.log("rhs " + new Buffer(rhs).toString('hex'));
-
-
-/*
-	eq: function(lhs, rhs) {
-		lhsS = JSON.stringify(lhs);
-		rhsS = JSON.stringify(rhs);
-		if (lhsS !== rhsS) {
-			throw new Error('Got "' + lhsS + '",\nExpected:  "' + rhsS + '"');
-		}
-	}
-*/
 
 var mk = require('./lib/mk');
 
@@ -113,3 +98,21 @@ assert.is(mk.handle('<hr>'), '<hr>');
 assert.is(mk.handle('> First line\n> another one.'), '<blockquote><p>First line\nanother one.\n</blockquote>');
 assert.is(mk.handle('> First paragraph\n> inside a blockquote.\n> \n> Second.'), '<blockquote><p>First paragraph\ninside a blockquote.\n<p>Second.\n</blockquote>');
 
+assert.is(mk.filterCode("<h1 class='foo'>One & two</h1>"), "&lt;h1 class=&#039;foo&#039;&gt;One &amp; two&lt;/h1&gt;");
+
+assert.is(mk.filter('X & Y'), 'X &amp; Y');
+assert.is(mk.filter('0 < a href > d < /a >'), '0 &lt; a href &gt; d &lt; /a &gt;');
+
+//assert.is(mk.filter('yes &ndash; no &amp; &'), 'yes &ndash; no &amp; &amp;');
+//assert.is(mk.filter("0 <a href='/get?x=1&y=2'>link</a>"), "0 <a href='/get?x=1&amp;y=2'>link</a>");
+
+assert.is(mk.italicize('Its /italic/.'), 'Its <i>italic</i>.');
+assert.is(mk.italicize('(/This, too/.)'), '(<i>This, too</i>.)');
+assert.is(mk.italicize('/(This, too.)/'), '<i>(This, too.)</i>');
+assert.is(mk.italicize('/a/ /b/ /c/ /d/'), '<i>a</i> <i>b</i> <i>c</i> <i>d</i>');
+assert.is(mk.italicize('This is /A/B testing/!'), 'This is <i>A/B testing</i>!');
+assert.is(mk.italicize('This is not: and/or/something'), 'This is not: and/or/something');
+assert.is(mk.italicize('1 / 2 * 3 / 4 + /a / b / c/.'), '1 / 2 * 3 / 4 + <i>a / b / c</i>.');
+assert.is(mk.italicize('/Italic/ starts, /in middle/, /ends/'), '<i>Italic</i> starts, <i>in middle</i>, <i>ends</i>');
+
+assert.is(mk.italicize('A // comment?'), 'A // comment?');
