@@ -93,7 +93,7 @@ assert.is(mk.handle('###### Subsubsubsubsubtitle'), '<h6>Subsubsubsubsubtitle</h
 assert.is(mk.handle('####### Subsubsubsubsubtitle'), '<p>####### Subsubsubsubsubtitle');
 assert.is(mk.handle('    while (true)\n        repeat();'), '<pre><code>while (true)\n    repeat();</code></pre>');
 assert.is(mk.handle('    while (true)\n*       repeat();'), '<pre><code>while (true)\n<b>    repeat();</b></code></pre>');
-assert.is(mk.handle('    <!doctype html>\n    <html>&c.</html>'), '<pre><code>&lt;!doctype html&gt;\n&lt;html&gt;&amp;c.&lt;/html&gt;</code></pre>');
+assert.is(mk.handle('    <!doctype html>\n    <html>&c.</html>'), '<pre><code>&lt;!doctype html&gt;\n&lt;html&gt;&amp;c.&lt;&sol;html&gt;</code></pre>');
 
 assert.is(mk.handle('* foo\n* bar'), '<ul>\n<li>foo\n<li>bar\n</ul>');
 assert.is(mk.handle('#. foo\n#. bar'), '<ol>\n<li>foo\n<li>bar\n</ol>');
@@ -103,18 +103,15 @@ assert.is(mk.handle('<hr>'), '<hr>');
 assert.is(mk.handle('> First line\n> another one.'), '<blockquote><p>First line\nanother one.\n</blockquote>');
 assert.is(mk.handle('> First paragraph\n> inside a blockquote.\n> \n> Second.'), '<blockquote><p>First paragraph\ninside a blockquote.\n<p>Second.\n</blockquote>');
 
-assert.is(mk.filterCode("<h1 class='foo'>One & two</h1>"), "&lt;h1 class=&#39;foo&#39;&gt;One &amp; two&lt;/h1&gt;");
+assert.is(mk.escapeCode("<h1 class='foo'>One & two</h1>"), "&lt;h1 class=&#39;foo&#39;&gt;One &amp; two&lt;&sol;h1&gt;");
 
 assert.is(mk.filter('X & Y'), 'X &amp; Y');
 assert.is(mk.filter('0 < a href > d < /a >'), '0 &lt; a href &gt; d &lt; /a &gt;');
 
-//assert.is(mk.filter('yes &ndash; no &amp; &'), 'yes &ndash; no &amp; &amp;');
-//assert.is(mk.filter("0 <a href='/get?x=1&y=2'>link</a>"), "0 <a href='/get?x=1&amp;y=2'>link</a>");
-
 assert.is(mk.codify('a `span` of `<code>`'), 'a <code>span</code> of <code>&lt;code&gt;</code>');
 assert.is(mk.codify('`a && b << 2 + ""`'), '<code>a &amp;&amp; b &lt;&lt; 2 + &quot;&quot;</code>');
 assert.is(mk.codify('`/italic/ and *bold* and _link to_ (foo.html)`'), '<code>&sol;italic&sol; and &ast;bold&ast; and &lowbar;link to&lowbar; (foo.html)</code>');
-assert.is(mk.codify('`/foo_bar/ & 1` looks like /foo_bar/ & 1'), '<code>&sol;foo&lowbar;bar&sol; &amp; 1</code> looks like /foo_bar/ &amp; 1');
+assert.is(mk.codify('`/foo_bar/ & 1` looks like /foo_bar/ & 1'), '<code>&sol;foo&lowbar;bar&sol; &amp; 1</code> looks like <i>foo_bar</i> &amp; 1');
 
 assert.is(mk.codify('`\\``'), '<code>`</code>');
 assert.is(mk.codify('`\\`` `\\\\` `\\\\\\``'), '<code>`</code> <code>\\</code> <code>\\`</code>');
@@ -125,13 +122,16 @@ assert.is(mk.italicize('Its /italic/.'), 'Its <i>italic</i>.');
 assert.is(mk.italicize('(/This, too/.)'), '(<i>This, too</i>.)');
 assert.is(mk.italicize('/(This, too.)/'), '<i>(This, too.)</i>');
 assert.is(mk.italicize('/a/ /b/ /c/ /d/'), '<i>a</i> <i>b</i> <i>c</i> <i>d</i>');
+
 assert.is(mk.italicize('This is /A/B testing/!'), 'This is <i>A/B testing</i>!');
 assert.is(mk.italicize('This is not: and/or/something'), 'This is not: and/or/something');
 assert.is(mk.italicize('1 / 2 * 3 / 4 + /a / b / c/.'), '1 / 2 * 3 / 4 + <i>a / b / c</i>.');
 assert.is(mk.italicize('/Italic/ starts, /in middle/, /ends/'), '<i>Italic</i> starts, <i>in middle</i>, <i>ends</i>');
 assert.is(mk.italicize('A // comment?'), 'A // comment?');
 assert.is(mk.italicize("across /the\nnewline/, too"), "across <i>the\nnewline</i>, too");
-assert.is(mk.italicize('<code>url = </code> http://foo.com/'), '<code>url = </code> http://foo.com/');
+assert.is(mk.italicize('<code>printf()</code> w/ extra sauce'), '<code>printf()</code> w/ extra sauce');
+assert.is(mk.italicize('https://this.is.url.com/'), 'https://this.is.url.com/');
+assert.is(mk.italicize('file:///path.to/some/file/'), 'file:///path.to/some/file/');
 
 assert.is(mk.boldify('*this is bold*'), '<b>this is bold</b>');
 assert.is(mk.boldify('*this* *too* *is*'), '<b>this</b> <b>too</b> <b>is</b>');
@@ -146,7 +146,6 @@ assert.is(mk.boldify(mk.italicize('*this /sentence is* invalid/')), '<b>this <i>
 assert.is(mk.italicize(mk.boldify('*this /sentence is* invalid/')), '<b>this <i>sentence is</b> invalid</i>');
 
 var bracketMatcher = function(string) {
-//	var pattern = /<([^<>]*(?:<[^<>]*>)?[^<>]*)>/;
 	var pattern = /<((?:[^<>]*<(?:[^<>]*<[^<>]*>)*[^<>]*>)*[^<>]*)>/;
 	var match = string.match(pattern);
 	return match ? match[1] : null;
@@ -183,3 +182,14 @@ assert.is(mk.linkify("_This fails_ (http://eval.com/(+ 1 (+ 2 (+ 3 4))))"), "<a>
 assert.is(mk.linkify("V8's _structured\nstack trace_ (http://code.google.com/p/v8/wiki/JavaScriptStackTraceApi)"), "V8's <a href='http://code.google.com/p/v8/wiki/JavaScriptStackTraceApi'>structured\nstack trace</a>");
 
 assert.is(mk("    int x;\n    \n    x = 1;"), "<pre><code>int x;\n\nx = 1;</code></pre>\n");
+
+assert.is(mk('    \\`'), '<pre><code>\\`</code></pre>\n');
+
+assert.is(mk.filter('yes &ndash; no &amp; &'), 'yes &ndash; no &amp; &amp;');
+assert.is(mk.filter('&#123;, &RightUpVector;, &#x2020;, but &auml'), '&#123;, &RightUpVector;, &#x2020;, but &amp;auml');
+assert.is(mk.filter("0 <a href='/get?x=1&y=2'>link</a>"), "0 <a href='/get?x=1&y=2'>link</a>");
+assert.is(mk.filter("<i data-etc='&c.' data-name='*this*'>*that* &c.</i>"), "<i data-etc='&c.' data-name='*this*'><b>that</b> &amp;c.</i>");
+assert.is(mk.filter('<span>&<span>&<span>'), '<span>&amp;<span>&amp;<span>');
+assert.is(mk.filter("if 0<x, I'm going to make this face >_<..."), "if 0<x, I'm going to make this face >_&lt;...");
+
+

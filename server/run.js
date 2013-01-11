@@ -45,7 +45,14 @@ function formatDate(date) {
 
 function filter(post, type) {
 	if (type == 'mk') {
-		return mk(post);
+		log("START");
+		var start = new Date();
+		for (var i = 0; i < 1000; i++) {
+			var result = mk(post);
+		}
+		var end = new Date();
+		log("END, took " + (end - start) + " ms");
+		return result;
 	} else {
 		return post;
 	}
