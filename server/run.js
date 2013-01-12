@@ -60,7 +60,7 @@ function filter(post, type, filename) {
 function readPost(filename, type) {
 	var content = fs.readFileSync(__dirname + "/../posts/" + filename, "utf-8");
 	content = filter(content, type, filename);
-	var titleMatch = content.match(/<h1>([^<]*)<\/h1>/);
+	var titleMatch = content.match(/<h1>([^]*?)<\/h1>/);
 	var title = titleMatch ? titleMatch[1] : "no title";
 	var datePattern = /<time[^>]*datetime='([^\']*)'[^>]*>/;
 	var dateMatch = content.match(datePattern);
