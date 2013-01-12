@@ -96,7 +96,8 @@ assert.is(mk.handle('    while (true)\n*       repeat();'), '<pre><code>while (t
 assert.is(mk.handle('    <!doctype html>\n    <html>&c.</html>'), '<pre><code>&lt;!doctype html&gt;\n&lt;html&gt;&amp;c.&lt;&sol;html&gt;</code></pre>');
 
 assert.is(mk.handle('* foo\n* bar'), '<ul>\n<li>foo\n<li>bar\n</ul>');
-assert.is(mk.handle('#. foo\n#. bar'), '<ol>\n<li>foo\n<li>bar\n</ol>');
+assert.is(mk.handle('* foo\n* bar\n  zot'), '<ul>\n<li>foo\n<li>bar\n  zot\n</ul>');
+//assert.is(mk.handle('#. foo\n#. bar'), '<ol>\n<li>foo\n<li>bar\n</ol>');
 
 assert.is(mk.handle('<hr>'), '<hr>');
 

@@ -43,15 +43,14 @@ function formatDate(date) {
 	return months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
 }
 
-function filter(post, type) {
+function filter(post, type, filename) {
 	if (type == 'mk') {
-		log("START");
 		var start = new Date();
-		for (var i = 0; i < 1000; i++) {
+		for (var i = 0; i < 1; i++) {
 			var result = mk(post);
 		}
 		var end = new Date();
-		log("END, took " + (end - start) + " ms");
+		log("formatting post " + filename + " took " + (end - start) + " ms");
 		return result;
 	} else {
 		return post;
@@ -60,7 +59,7 @@ function filter(post, type) {
 
 function readPost(filename, type) {
 	var content = fs.readFileSync(__dirname + "/../posts/" + filename, "utf-8");
-	content = filter(content, type);
+	content = filter(content, type, filename);
 	var titleMatch = content.match(/<h1>([^<]*)<\/h1>/);
 	var title = titleMatch ? titleMatch[1] : "no title";
 	var datePattern = /<time[^>]*datetime='([^\']*)'[^>]*>/;
