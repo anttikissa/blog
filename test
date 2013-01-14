@@ -49,7 +49,7 @@ var mk = require('./lib/mk');
 
 assert.is(mk.trim('a\n  \nb'), 'a\n\nb');
 assert.is(mk.trim('foo\n  \n  bar  \n\t\nzot'), 'foo\n\n  bar  \n\nzot');
-assert.is(mk.trim('\n\nfoo\n\n\n'), 'foo');
+assert.is(mk.trim('\n\nfoo\n\n  \n'), 'foo');
 assert.is(mk.trim('one\n   \ntwo\t  \n \t\f\r\nthree \n\n '), 'one\n\ntwo\t  \n\nthree ');
 
 assert.is(mk.untabify('\t'), '    ');
@@ -93,11 +93,11 @@ assert.is(mk.handle('###### Subsubsubsubsubtitle'), '<h6>Subsubsubsubsubtitle</h
 assert.is(mk.handle('####### Subsubsubsubsubtitle'), '<p>####### Subsubsubsubsubtitle');
 assert.is(mk.handle('    while (true)\n        repeat();'), '<pre><code>while (true)\n    repeat();</code></pre>');
 assert.is(mk.handle('    while (true)\n*       repeat();'), '<pre><code>while (true)\n<b>    repeat();</b></code></pre>');
-assert.is(mk.handle('    <!doctype html>\n    <html>&c.</html>'), '<pre><code>&lt;!doctype html&gt;\n&lt;html&gt;&amp;c.&lt;&sol;html&gt;</code></pre>');
+//assert.is(mk.handle('    <!doctype html>\n    <html>&c.</html>'), '<pre><code>&lt;!doctype html&gt;\n&lt;html&gt;&amp;c.&lt;&sol;html&gt;</code></pre>');
 
 assert.is(mk.handle('* foo\n* bar'), '<ul>\n<li>foo\n<li>bar\n</ul>');
 assert.is(mk.handle('* foo\n* bar\n  zot'), '<ul>\n<li>foo\n<li>bar\n  zot\n</ul>');
-//assert.is(mk.handle('#. foo\n#. bar'), '<ol>\n<li>foo\n<li>bar\n</ol>');
+assert.is(mk.handle('#. foo\n#. bar'), '<ol>\n<li>foo\n<li>bar\n</ol>');
 
 assert.is(mk.handle('<hr>'), '<hr>');
 

@@ -1,0 +1,415 @@
+# A markdown killer, part 2 -- the grand scheme of things
+
+<time datetime='2013-01-10T12:31:07.000Z'></time>
+
+We now have a test harness in place and are ready to write our first tests.
+Here's how the implementation currently looks like in my mind:
+
+#. first, do some preprocessing to separate the /top-level elements/, which is
+  what we name the bigger building blocks: paragraphs, headings, lists, code
+  blocks, etc.  (In the _previous HTML spec_
+  (http://www.w3.org/TR/html401/struct/global.html#h-7.5.3) these roughly
+  corresponded to 'block-level elements'; with HTML5, it's something like the
+  set of elements that are _flow content_
+  (http://developers.whatwg.org/content-models.html#flow-content) but are not
+  _phrasing content_
+  (http://developers.whatwg.org/content-models.html#phrasing-content).)
+#. handle these one at a time
+#. within the text sequences in each top-level element, process /inline
+  directives/, which is a fancy way to say 'things like bold, italic, links and
+  inline code'.  This is also where we escape HTML character references so we
+  can use things like ampersands in our text.
+
+We start by writing the tests for the preprocessing phase.  The first thing to
+do is to split the file into parts separated by one or more blank lines.  For
+that to work, we need a `trim` function that removes whitespace from blank lines
+(i.e.  containing only whitespace), so they can be matched more easily.  It also
+removes leading and trailing newlines.
+
+These tests test the `trim` function (which we'll expose as part of `mk`):
+
+	var mk = require('./lib/mk');
+	
+	assert.is(mk.trim('a\n  \nb'), 'a\n\nb');
+	assert.is(mk.trim('foo\n  \n  bar  \n\t\nzot'), 'foo\n\n  bar  \n\nzot');
+	assert.is(mk.trim('\n\nfoo\n\n  \n'), 'foo');
+	assert.is(mk.trim('one\n   \ntwo\t  \n \t\f\r\nthree \n\n '), 'one\n\ntwo\t  \n\nthree ');
+
+The following regular expressions (in `lib/mk.js`) perform these feats:
+
+	function trim(text) {
+		var withoutBlankLines = text.replace(/\n[ \f\r\t\v]*$/gm, '\n');
+		var withoutStartingOrLeadingNewlines = 
+				withoutBlankLines.replace(/(^\n*)|(\n*$)/g, '');
+		return withoutStartingOrLeadingNewlines;
+	}
+
+	...
+
+	module.exports.trim = trim;
+
+(In the future, we'll export all tested functions like `trim` without mentioning
+it explicitly.)
+
+Next we convert tabs to spaces using the `untabify` function.  This may not be
+the most elegant nor the most efficient solution, but works well enough to let
+us move on:
+
+`test`:
+
+	assert.is(mk.untabify('\t'), '    ');
+	assert.is(mk.untabify(' \t'), '    ');
+	assert.is(mk.untabify('  \t'), '    ');
+	assert.is(mk.untabify('   \t'), '    ');
+	assert.is(mk.untabify('    \t'), '        ');
+	assert.is(mk.untabify('\tbar'), '    bar');
+	assert.is(mk.untabify('*\tbar'), '*   bar');
+	assert.is(mk.untabify(' *\t two'), ' *   two');
+	assert.is(mk.untabify(' *\t\t three'), ' *       three');
+	assert.is(mk.untabify('\t1\t2\n  \t\t zot\t'), '    1   2\n         zot    ');
+
+`lib/mk.js`:
+
+	function untabify(text) {
+		result = '';
+		column = 0;
+		for (var i = 0, len = text.length; i < len; i++) {
+			var c = text[i];
+			if (c == '\t') {
+				result += ' ';
+				while (++column % 4 != 0) {
+					result += ' ';
+				}
+				continue;
+			} else if (c == '\n') {
+				column = 0;
+			} else {
+				column++;
+			}
+			result += c;
+		}
+		return result;
+	}
+
+Then it's `split` time.  To test it, we add `.eq` method to `assert` that
+checks for deep equality, and then use it:
+
+`test`:
+
+	assert = {
+		is: function(lhs, rhs) {
+			...
+*		},
+
+*		eq: function(lhs, rhs) {
+*			lhsS = JSON.stringify(lhs);
+*			rhsS = JSON.stringify(rhs);
+*			if (lhsS !== rhsS) {
+*				error('"' + lhsS + '" is not "' + rhsS + '"');
+*			}
+*		}
+	} 
+
+	...
+
+*	assert.eq(mk.split('one\ntwo\n\nthree\n\n\nfour'), ['one\ntwo', 'three', 'four']);
+
+`split` breaks the paragraph (or similar top-level element) whenever it sees
+two or more consecutive newlines:
+
+	function split(text) {
+		return text.split(/\n\n+/);
+	}
+
+Now we have a list of top-level elements whose types we need to figure out:
+paragraph, heading, raw html element, code block, unordered and ordered lists,
+and blockquotes.  If we don't find an element type, we'll assume it's a
+paragraph.
+
+`type` finds out the type of a block.  First, the tests:
+
+`test`:
+
+	assert.is(mk.type('# foo'), 'heading');
+	assert.is(mk.type(' # foo'), 'paragraph');
+	assert.is(mk.type('###### foo'), 'heading');
+	assert.is(mk.type('####### foo'), 'paragraph');
+	assert.is(mk.type('    foo'), 'codeBlock');
+	assert.is(mk.type('   foo'), 'paragraph');
+	assert.is(mk.type('*   foo'), 'codeBlock');
+	assert.is(mk.type('*  foo'), 'ul');
+	assert.is(mk.type('* list'), 'ul');
+	assert.is(mk.type('*list'), 'paragraph');
+	assert.is(mk.type('#. list'), 'ol');
+	assert.is(mk.type('#.list'), 'paragraph');
+	assert.is(mk.type('> text'), 'blockquote');
+	assert.is(mk.type('>text'), 'paragraph');
+	assert.is(mk.type('<ins>text</ins>'), 'html');
+	assert.is(mk.type(' <ins>text</ins>'), 'html');
+	assert.is(mk.type('A <ins>text</ins>'), 'paragraph');
+	assert.is(mk.type('* <ins>text</ins>'), 'ul');
+	assert.is(mk.type('Hello world!'), 'paragraph');
+
+Then, we'll implement `type`.  We find out that it's easiest to just look at the
+first line -- we like to be as strict as possible to enforce consistent
+formatting of the source file, but not at the expense of too much implementation
+complexity.
+
+	function type(element) {
+		if (/^#{1,6} /.test(element)) {
+			return 'heading';
+		} else if (/^    /.test(element)) {
+			return 'codeBlock';
+		} else if (/^\*   /.test(element)) {
+			return 'codeBlock';
+		} else if (/^\* /.test(element)) {
+			return 'ul';
+		} else if (/^\#\. /.test(element)) {
+			return 'ol';
+		} else if (/^> /.test(element)) {
+			return 'blockquote';
+		} else if (/^\s*</.test(element)) {
+			return 'html';
+		} else {
+			return 'paragraph';
+		}
+	}
+
+Elements are handled by `handle`:
+
+`lib/mk.js`:
+
+	function handle(element) {
+		return handlers[type(element)](element)
+	}
+
+	var handlers = {
+		heading: function(element) { ... },
+		codeBlock: function(element) { ... },
+		ul: function(element) { ... },
+		ol: function(element) { ... },
+		html: function(element) { ... },
+		blockquote: function(element) { ... },
+		paragraph: function(element) { ... ]
+	};
+
+## Paragraphs
+
+We'll start by implementing paragraphs, which are quite straightforward.  Inline
+formatting is skipped for now.
+
+`test`:
+
+		assert.is(mk.handle('This is a paragraph.'), '<p>This is a paragraph.');
+		assert.is(mk.handle('A two-line\nparagraph.'), '<p>A two-line\nparagraph.');
+
+`lib/mk.js`:
+
+	paragraph: function(element) {
+		return "<p>" + element;
+	},
+
+## Headings
+
+	assert.is(mk.handle('# Title'), '<h1>Title</h1>');
+	assert.is(mk.handle('###### Subsubsubsubsubtitle'), '<h6>Subsubsubsubsubtitle</h6>');
+	assert.is(mk.handle('####### Subsubsubsubsubtitle'), '<p>####### Subsubsubsubsubtitle');
+
+For now, the inline translations (italics, bold, links and inline code quotes)
+are not performed.  We'll test and implement them later.
+
+Headings are handled by simply wrapping the content inside a `<hN>` tag, where
+`N` denotes the amount of `#`'s:
+
+		heading: function(element) {
+			var form = /^(#{1,6}) (.*)$/;
+			var match = element.match(form);
+			var level = match[1].length;
+			var content = match[2];
+			return "<h" + level + ">" + content + "</h" + level + ">";
+		},
+
+## Code blocks
+
+	assert.is(mk.handle('    while (true)\n        repeat();'), '<pre><code>while (true)\n    repeat();</code></pre>');
+	assert.is(mk.handle('    while (true)\n*       repeat();'), '<pre><code>while (true)\n<b>    repeat();</b></code></pre>');
+	assert.is(mk.handle('    <!doctype html>\n    <html>&c.</html>'), '<pre><code>&lt;!doctype html&gt;\n&lt;html&gt;&amp;c.&lt;&sol;html&gt;</code></pre>');
+
+Code blocks require a bit more logic because we want to boldface the lines
+beginning with `*`:
+
+		codeBlock: function(element) {
+			var lines = element.split('\n');
+			function deindent(line) {
+				var form = /^(\*| )   (.*)$/;
+				var match = line.match(form);
+				if (!match) {
+					return escape(line);
+				}
+				if (match[1] == '*') {
+					return "<b>" + escape(match[2]) + "</b>";
+				} else {
+					return escape(match[2]);
+				}
+			}
+			var content = lines.map(deindent).join('\n');
+
+			return "<pre><code>" + content + "</code></pre>";
+		},
+
+## Lists
+
+Ordered and unordered lists share the same structure.  They are relatively
+straightforward to test and implement:
+
+	assert.is(mk.handle('* foo\n* bar'), '<ul>\n<li>foo\n<li>bar\n</ul>');
+	assert.is(mk.handle('#. foo\n#. bar'), '<ol>\n<li>foo\n<li>bar\n</ol>');
+
+The implementation requires two helper functions that do the work:
+
+	function li(item, prefix) {
+		var content = item.replace(prefix, '');
+		return "<li>" + content;
+	}
+
+	function list(type, prefix, element) {
+		var result = "<" + type + ">\n";
+		element.split('\n').forEach(function(item) {
+			result += li(item, prefix) + '\n';
+		});
+		result += "</" + type + ">";
+		return result;
+	}
+
+After that, the implementation is straightforward:
+
+	ul: function(element) {
+		return list("ul", /^\* /, element);
+	},
+	ol: function(element) {
+		return list("ol", /^#. /, element);
+	},
+
+## HTML elements
+
+HTML elements are passed as-is.  It seems silly to even test it.  We'll do it
+anyway.
+
+	assert.is(mk.handle('<hr>'), '<hr>');
+
+and
+
+	html: function(element) {
+		return element;
+	},
+
+## Blockquotes
+
+Blockquotes seem straightforward as well.  They simply strip their input of the
+`> ` prefix and run it through `mk` so as to support things like multiple
+paragraphs inside a blockquote, blockquotes inside a blockquote, etc. 
+
+	assert.is(mk.handle('> First line\n> another one.'), '<blockquote><p>First line\nanother one.</blockquote>');
+	assert.is(mk.handle('> First paragraph\n> inside a blockquote.\n> \n> Second.'), '<blockquote><p>First paragraph\ninside a blockquote.\n<p>Second.\n</blockquote>');
+
+But we still need to implement `mk` -- to do that, we use the building blocks we
+have created and tested before.  `mk` preprocesses the text first with `trim`
+and `untabify`, splits it into parts, handles each part separately, and finally
+join them with newlines.
+
+	function mk(text) {
+*		var preprocessed = untabify(trim(text));
+*		var parts = split(preprocessed);
+*		var converted = parts.map(handle);
+*		return converted.join('\n') + '\n';
+	}
+
+After that, we can implement `blockquote`:
+
+	blockquote: function(element) {
+		var stripped = element.replace(/^>( |$)/gm, '');
+		return "<blockquote>" + mk(stripped) + "</blockquote>";
+	}
+
+We take care to also consider the empty lines within the blockquote, where
+leaving out the space after `>` does not hinder readability.
+
+> Here is a blockquote, for testing.
+> This is another line on the first paragraph.
+>
+> and this is the second paragraph.
+> 
+>     Here we have a code block.
+>     printf("Hello world!\n");
+
+## Inline elements
+ 
+Now that the high-level structure is in place, we turn to look at the inline
+elements.  There are two environments to take care of: inside `<code>` elements,
+where we want to escape pretty much everything, and elsewhere (except inside
+raw HTML elements), where we want to translate our own markup and escape HTML
+character references.
+
+(Or at least some of them: at this point it begins to fade to me that we need
+to so some "smart" HTML recognition here; we want to escape the ampersand in
+`Smith & Jones` but not the ampersand in `&copy;` and we want to escape the
+inequality signs brackets in `if value < a but a > 0`, but not in `<a
+href='#'>link text a</a>`.)
+
+We forget HTML quoting for a moment and implement `filter` and `escapeCode` in
+`lib/mk.js` with straightforward ones:
+
+	function filter(text) {
+		return escape(text);
+	}
+
+	function escapeCode(text) {
+		return escape(text);
+	}
+
+We add some tests we expect to pass:
+
+	assert.is(mk.escapeCode("<h1 class='foo'>One & two</h1>"), "&lt;h1 class=&#39;foo&#39;&gt;One &amp; two&lt;/h1&gt;");
+	assert.is(mk.filter('X & Y'), 'X &amp; Y');
+	assert.is(mk.filter('a < b'), 'a &lt; b');
+
+And others that won't pass yet, so we'll comment them out and revisit the
+problem later:
+
+	//assert.is(mk.filter('yes &ndash; no &amp; &'), 'yes &ndash; no &amp; &amp;');
+	//assert.is(mk.filter("0 <a href='/get?x=1&y=2'>link</a>"), "0 <a href='/get?x=1&amp;y=2'>link</a>");
+
+Then we'll start using `filter` and `escapeCode` in the proper places (`lib/mk.js`:)
+
+	function li(item, prefix) {
+		var content = item.replace(prefix, '');
+*		return "<li>" + filter(content);
+	}
+
+	...
+
+	var handlers = {
+		paragraph: function(element) {
+*			return "<p>" + filter(element);
+		},
+		heading: function(element) {
+			...
+*			var content = filter(match[2]);
+			return "<h" + level + ">" + content + "</h" + level + ">";
+		},
+		codeBlock: function(element) {
+			...
+				if (!match) {
+*					return escapeCode(line);
+				}
+				if (match[1] == '*') {
+*					return "<b>" + escapeCode(match[2]) + "</b>";
+				} else {
+*					return escapeCode(match[2]);
+				}
+
+Now the big things should work;  try running the code with code blocks, lists,
+and blockquotes, and see if you get nice-looking results!
+
+To see how to implement the inline elements, see _part 3_ (/7).
+
