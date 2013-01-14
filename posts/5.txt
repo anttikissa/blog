@@ -1,5 +1,7 @@
 # A markdown killer
 
+<time datetime='2013-01-08T12:31:07.000Z'></time>
+
 In this post, we'll create an easier way to write the posts.
 
 We might use a readymade markup language such as Markdown or Textile, but for
@@ -688,12 +690,15 @@ formatting:
 	function linkify(text) {
 	}
 
+	function dashify(text) {
+	}
+
 To implement `filter`, we expect these functions to be called in sequence.  The
 sequence I'm thinking about is `codify` -> `italicize` -> `boldify` ->
-`linkify`:  I figure that `codify` needs to come first so that the slashes,
-asterisks, and underscores inside code blocks won't be translated.  The order of
-`italicize`, `boldify` and `linkify` is pretty much arbitrary.  If we run into
-trouble with this order, we'll deal with it at that time.
+`linkify` -> `dashify`:  I figure that `codify` needs to come first so that the
+slashes, asterisks, and underscores inside code blocks won't be translated.  The
+order of the rest is pretty much arbitrary.  If we run into trouble with this
+order, we'll deal with it at that time.
 
 But let's first test them in separately.
 
@@ -1068,6 +1073,25 @@ three levels fails:
 We'll live with that restriction (at least until we decide to use some other
 technology than regular expressions to do the matching).
 
+## Dashify
+
+Finally we replace the dashes, taking care to avoid HTML comments and sequences
+of longer than three dashes:
+
+	assert.is(mk.dashify('-- stuff---more --'), '&ndash; stuff&mdash;more &ndash;');
+	assert.is(mk.dashify('<!-- comment --> -- not touched'), '<!-- comment --> &ndash; not touched');
+	assert.is(mk.dashify('a longdash-----is not touched'), 'a longdash-----is not touched');
+
+And the implementation:
+
+		function dashify(text) {
+			var pattern = /(^|[^!-])(---?)([^->]|$)/g;
+			return text.replace(pattern, function(match, p1, p2, p3) {
+				return p1 + '&' + (p2.length === 2 ? 'n' : 'm') + 'dash;' + p3;
+			});
+		}
+
+
 ## Finish the unfinished
 
 We note that code blocks that have blank lines in the middle get split up (even
@@ -1278,7 +1302,7 @@ and `escapeText` in whole:
 The function `format`, then, ties everything else together:
 
 *	function format(text) {
-*		return linkify(boldify(italicize(text)));
+*		return dashify(linkify(boldify(italicize(text))));
 *	}
 
 And the `filter` function simply reduces to:
@@ -1312,9 +1336,14 @@ our implementation will converge to a more or less bug-free one.
 
 * Make sure that the tests are run in production as well. Is this a good idea
 to do during the deployment, or whenever the server is started?
+* Implement list items that can span multiple lines:
 
+    * This line contains a long description that wants to extend to the next line,
+      in which case we indent it a bit.
+    * And here is the second item.
+
+* Implement nested list items.
 * Test that `filter` and `escapeCode` are used where they should be.
-
 * Make it possible to escape `*`, `_`, `(`, `)` and `/` outside `<code>`
 elements.
 
