@@ -12,30 +12,30 @@
 		font-size: 16px;
 	}
 	body {
-		line-height: 22px;
-		width: 506px;
+		line-height: 24px;
+		width: 575px;
 		margin: 0 auto;
 	}
 	img {
 		display: block;
-		width: 506px;
+		width: 575px;
 	}
 	pre {
-		width: 762px;
+		width: 867px;
 	}
 	code, pre.code {
 		font-family: 'Courier New';
 		font-size: 15px;
 	}
 	h1 {
-		font-size: 22px;
+		font-size: 24px;
 		font-weight: normal;
 	}
 	h2, h3 {
 		font-size: 16px;
 	}
 	h1, h2, p, ul, ol, pre, footer {
-		margin: 22px 0;
+		margin: 24px 0;
 	}
 	h1 {
 		margin-top: 52px;
@@ -43,17 +43,35 @@
 		top: -2px;
 	}
 	h1 + time {
-		margin-top: -22px;
+		margin-top: -24px;
 		display: block;
 		font-size: 14px;
 		font-variant: small-caps;
 		letter-spacing: 1px;
 	}
 	blockquote {
-		margin: 22px 44px;
+		margin: 24px 50px;
 	}
+
+	.aside {
+		position: relative;
+		top: 3px;
+		float: right;
+		width: 275px;
+		margin-right: -300px;
+		font-size: 14px;
+		line-height: 18px;
+		color: #666;
+	}
+
+	.aside code {
+		color: #666;
+		font-size: 13px;
+		line-height: 18px;
+	}
+
 	ul, ol {
-		padding: 0 0 0 44px;
+		padding: 0 0 0 50px;
 	}
 
 	code, pre {
@@ -75,7 +93,7 @@
 	/* TODO */
 	pre.code {
 		padding: 0;
-		line-height: 22px;
+		line-height: 24px;
 		border-top: none;
 	}
 
@@ -101,7 +119,7 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		max-width: 248px;
+		max-width: 280px; /* a little less than 575 / 2 */
 	}
 
 	footer a.prev {
@@ -121,7 +139,7 @@
 	}
 
 	footer {
-		padding-bottom: 22px;
+		padding-bottom: 24px;
 	}
 
 </style>
