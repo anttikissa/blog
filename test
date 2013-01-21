@@ -104,24 +104,27 @@ assert.is(mk.handle('<hr>'), '<hr>');
 assert.is(mk.handle('> First line\n> another one.'), '<blockquote><p>First line\nanother one.\n</blockquote>');
 assert.is(mk.handle('> First paragraph\n> inside a blockquote.\n> \n> Second.'), '<blockquote><p>First paragraph\ninside a blockquote.\n<p>Second.\n</blockquote>');
 
-assert.is(mk.escapeCode("<h1 class='foo'>One & two</h1>"), "&lt;h1 class=&#39;foo&#39;&gt;One &amp; two&lt;&sol;h1&gt;");
+assert.is(mk.escape("<h1 class='foo'>One & two</h1>"), "&lt;h1 class=&#39;foo&#39;&gt;One &amp; two&lt;/h1&gt;");
 
 assert.is(mk.filter('X & Y'), 'X &amp; Y');
 assert.is(mk.filter('0 < a href > d < /a >'), '0 &lt; a href &gt; d &lt; /a &gt;');
 
 assert.is(mk.codify('a `span` of `<code>`'), 'a <code>span</code> of <code>&lt;code&gt;</code>');
 assert.is(mk.codify('`a && b << 2 + ""`'), '<code>a &amp;&amp; b &lt;&lt; 2 + &quot;&quot;</code>');
-assert.is(mk.codify('`/italic/ and *bold* and _link to_ (foo.html)`'), '<code>&sol;italic&sol; and &ast;bold&ast; and &lowbar;link to&lowbar; (foo.html)</code>');
-assert.is(mk.codify('`/foo_bar/ & 1` looks like /foo_bar/ & 1'), '<code>&sol;foo&lowbar;bar&sol; &amp; 1</code> looks like <i>foo_bar</i> &amp; 1');
+//assert.is(mk.codify('`/italic/ and *bold* and _link to_ (foo.html)`'), '<code>&sol;italic&sol; and &ast;bold&ast; and &lowbar;link to&lowbar; (foo.html)</code>');
+assert.is(mk.filter('`/foo_bar/ & 1` looks like /foo_bar/ & 1'), '<code>/foo_bar/ &amp; 1</code> looks like <i>foo_bar</i> &amp; 1');
 
-assert.is(mk.codify('`\\``'), '<code>`</code>');
-assert.is(mk.codify('`\\`` `\\\\` `\\\\\\``'), '<code>`</code> <code>\\</code> <code>\\`</code>');
-assert.is(mk.codify('A \\` outside a `<code>` block'), "A ` outside a <code>&lt;code&gt;</code> block");
-assert.is(mk.codify('&`code`'), '&amp;<code>code</code>');
+//assert.is(mk.codify('`\\``'), '<code>`</code>');
+//assert.is(mk.codify('`\\`` `\\\\` `\\\\\\``'), '<code>`</code> <code>\\</code> <code>\\`</code>');
+//assert.is(mk.codify('A \\` outside a `<code>` block'), "A ` outside a <code>&lt;code&gt;</code> block");
+//assert.is(mk.codify('&`code`'), '&amp;<code>code</code>');
 
-assert.is(mk.italicize('Its /italic/.'), 'Its <i>italic</i>.');
+assert.is(mk.italicize('Its /italic/, /and this/.'), 'Its <i>italic</i>, <i>and this</i>.');
+assert.is(mk.italicize('And // this?'), 'And // this?');
 assert.is(mk.italicize('(/This, too/.)'), '(<i>This, too</i>.)');
 assert.is(mk.italicize('/(This, too.)/'), '<i>(This, too.)</i>');
+assert.is(mk.italicize('/Really/?'), '<i>Really</i>?');
+assert.is(mk.italicize('/Really!/'), '<i>Really!</i>');
 assert.is(mk.italicize('/a/ /b/ /c/ /d/'), '<i>a</i> <i>b</i> <i>c</i> <i>d</i>');
 
 assert.is(mk.italicize('This is /A/B testing/!'), 'This is <i>A/B testing</i>!');
@@ -178,6 +181,7 @@ assert.is(mk.linkify("_Google_ (http://google.com/?q=foo&x='abc')"), "<a href='h
 assert.is(mk.linkify("_A (band)_ (http://en.wikipedia.org/wiki/A_(band))"), "<a href='http://en.wikipedia.org/wiki/A_(band)'>A (band)</a>");
 assert.is(mk.linkify("_Law (band)_ (http://en.wikipedia.org/wiki/Law_(band)_(disambiguation))"), "<a href='http://en.wikipedia.org/wiki/Law_(band)_(disambiguation)'>Law (band)</a>");
 assert.is(mk.linkify("_Hypothetical URL_ (http://eval.com/(+ 1 (+ 2 3)))"), "<a href='http://eval.com/(+ 1 (+ 2 3))'>Hypothetical URL</a>");
+assert.is(mk.linkify("_Hypothetical URL_ (http://eval.com/(+ 1 (+ 2 3) (- 2 3) ()()()))"), "<a href='http://eval.com/(+ 1 (+ 2 3) (- 2 3) ()()())'>Hypothetical URL</a>");
 assert.is(mk.linkify("_This fails_ (http://eval.com/(+ 1 (+ 2 (+ 3 4))))"), "<a>This fails</a> (http://eval.com/(+ 1 (+ 2 (+ 3 4))))");
 
 assert.is(mk.linkify("V8's _structured\nstack trace_ (http://code.google.com/p/v8/wiki/JavaScriptStackTraceApi)"), "V8's <a href='http://code.google.com/p/v8/wiki/JavaScriptStackTraceApi'>structured\nstack trace</a>");
@@ -195,6 +199,10 @@ assert.is(mk.filter('&#123;, &RightUpVector;, &#x2020;, but &auml'), '&#123;, &R
 assert.is(mk.filter("0 <a href='/get?x=1&y=2'>link</a>"), "0 <a href='/get?x=1&y=2'>link</a>");
 assert.is(mk.filter("<i data-etc='&c.' data-name='*this*'>*that* &c.</i>"), "<i data-etc='&c.' data-name='*this*'><b>that</b> &amp;c.</i>");
 assert.is(mk.filter('<span>&<span>&<span>'), '<span>&amp;<span>&amp;<span>');
-assert.is(mk.filter("if 0<x, I'm going to make this face >_<..."), "if 0<x, I'm going to make this face >_&lt;...");
+assert.is(mk.filter("if 0<x, I'm *so* going to make this face >_< - I /am/"), "if 0<x, I'm *so* going to make this face >_&lt; - I <i>am</i>");
+
+assert.is(mk.filter('/Url is http://foo.com'), '/Url is http://foo.com');
+assert.is(mk.filter('This /might not get italicized:/'), 'This /might not get italicized:/');
+assert.is(mk.normalText('<br & />&/'), '<br & />&amp;/');
 
 

@@ -4,32 +4,39 @@
 
 In this last part, we process the inline elements: `*bold*`, `*italics*`,
 `_links_ (url)`, translate certain characters to HTML character references, and
-wrap it all together.
+wrap it all together.  These are handled by `filter` function that is called
+whenever a textual passage is encountered.
 
 We define functions for detecting and translating different kinds of
-formatting:
+formatting, writing stubs that do nothing for a start:
 
 	function codify(text) {
+		return text;
 	}
 
 	function italicize(text) {
+		return text;
 	}
 
 	function boldify(text) {
+		return text;
 	}
 
 	function linkify(text) {
+		return text;
 	}
 
 	function dashify(text) {
+		return text;
 	}
 
 To implement `filter`, we expect these functions to be called in sequence.  The
-sequence I'm thinking about is `codify` -> `italicize` -> `boldify` ->
-`linkify` -> `dashify`:  I figure that `codify` needs to come first so that the
-slashes, asterisks, and underscores inside code blocks won't be translated.  The
-order of the rest is pretty much arbitrary.  If we run into trouble with this
-order, we'll deal with it at that time.
+sequence I'm thinking about is `codify` &rarr; `italicize` &rarr; `boldify`
+&rarr; `linkify` &rarr; `dashify`.  `codify` needs to come first since it
+determines which
+pieces of text will be run through the rest of the filters, and which pieces
+will be treated as code.  The order of the others is probably pretty much
+arbitrary.
 
 But let's first test them separately.
 
@@ -38,55 +45,37 @@ But let's first test them separately.
 	assert.is(mk.codify('a `span` of `<code>`'), 'a <code>span</code> of <code>&lt;code&gt;</code>');
 	assert.is(mk.codify('`a && b << 2 + ""`'), '<code>a &amp;&amp; b &lt;&lt; 2 + &quot;&quot;</code>');
 
-To `codify`, we split the string into parts by `\`` and wrap every other part in
-`<code>`:
+To `codify`, we first find the parts that are surrounded by backticks, run them
+through the `escape` function introduced earlier, and wrap them inside a `<code>` element:
 
 	function codify(text) {
-		var parts = text.split('`');
-		return parts.map(function(part, i) {
-			if (i % 2) {
-				return '<code>' + escapeCode(part) + '</code>';
-			} else {
-				return part;
-			}
-		}).join('');
+		var pattern = /`(.*?)`/g;
+		return text.replace(pattern, function(match, p1) {
+			return '<code>' + escape(p1) + '</code>';
+		});
 	}
 
-To protect the special characters inside `<code>` blocks from being translated
-in the later phases, we need to quote them in `escapeCode`:
+But then we need to process the text outside `<code>`.  Let's make that part of
+`filter`:
 
-	assert.is(mk.codify('`/italic/ and *bold* and _link to_ (foo.html)`'), '<code>&sol;italic&sol; and &ast;bold&ast; and &lowbar;link to&lowbar; (foo.html)</code>');
+	function filter(text) {
+		var codified = codify(text);
 
-`escapeCode` also needs to quote all characters that might affect formatting in
-the later parts of processing:
-
-	function escapeCode(text) {
-		return text
-			.replace(/&/g, '&amp;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;')
-			.replace(/"/g, '&quot;')
-			.replace(/'/g, '&#39;')
-			.replace(/\//g, '&sol;')
-			.replace(/\*/g, '&ast;')
-			.replace(/_/g, '&lowbar;');
+		var restPattern = /(^|<\/code>)([^]*?)(<code>|$)/g;
+		return codified.replace(restPattern, function(match, p1, p2, p3) {
+			return p1 + normalText(p2) + p3;
+		});
 	}
 
-At this point we also realize that it is useful escape the non-`code` parts in
-`codify` as well, since we have it already in our hands:
-
-	function codify(text) {
-		var parts = text.split('`');
-		return parts.map(function(part, i) {
-			if (i % 2) {
-				return '<code>' + escapeCode(part) + '</code>';
-			} else {
-*				return escape(part);
-			}
-		}).join('');
+	function normalText(text) {
+		return dashify(linkify(boldify(italicize(text))));
 	}
 
-We add a test for this as well:
+This looks for text sequences starting with `</code>` (or the start of the string)
+and ending with `<code>` (or the end of the string).  The text in between is
+matched with `[^]*?`, or 'any character (including newline) any number of times,
+non-greedily'.  The text in between is then passed to `normalText`, which
+handles the rest.
 
 	assert.is(mk.codify('`/foo_bar/ & 1` looks like /foo_bar/ & 1'), '<code>&sol;foo&lowbar;bar&sol; &amp; 1</code> looks like /foo_bar/ &amp; 1');
 
@@ -99,22 +88,24 @@ slashes); we'll revisit that later.
 prelude to what's coming later when we get to URL matching.)
 
 To italicize, we must first decide how an `/italic/` block can start and how
-it can end.  We want the slashes to work outside words:
+it can end.  We want the slashes to work outside sequences of words:
 
-	assert.is(mk.italicize('Its /italic/.'), 'Its <i>italic</i>.');
+	assert.is(mk.italicize('Its /italic/, /and this/.'), 'Its <i>italic</i>, <i>and this</i>.');
 
 We check that a sequence of italics work:
 
 	assert.is(mk.italicize('/a/ /b/ /c/ /d/'), '<i>a</i> <i>b</i> <i>c</i> <i>d</i>');
 
-Also inside parentheses (and outside, even though that's against the
-typographical convention):
+Also inside parentheses and other punctuation (and outside, even though that's
+against the typographical convention):
 
 	assert.is(mk.italicize('(/This, too/.)'), '(<i>This, too</i>.)');
 	assert.is(mk.italicize('/(This, too.)/'), '<i>(This, too.)</i>');
+	assert.is(mk.italicize('/Really/?'), '<i>Really</i>?');
+	assert.is(mk.italicize('/Really!/'), '<i>Really!</i>');
 
-Slashes inside italicized blocks need to be allowed, and a standalone slash
-should be inert:
+Slashes inside italicized blocks should go unmodified, as should slashes that
+don't touch any words.  (There should be no need to italicize white space.)
 
 	assert.is(mk.italicize('This is /A/B testing/!'), 'This is <i>A/B testing</i>!');
 	assert.is(mk.italicize('This is not: and/or/something'), 'This is not: and/or/something');
@@ -152,19 +143,18 @@ to prevent the whole string from being matched at once:
 
 This lets us through a couple of tests, but now we have the problem of at `1 / 2
 * 3 / 4` turning into `1 <i> 2 * 3 </i> 4`.  So we'd like to prevent slashes
-surrounded by white space to be not matched.  In fact, it's easier to follow a
-simpler and stricter policy: a slash /followed/ by white space cannot be matched
-(as the start slash).  This prevents `/ something/` from being matched, but then
-again, if that /should/ be matched, why wouldn't ` / something/`?  Sometimes
-strictness is just good.
+surrounded by white space to be not matched.  That can be done using regular
+expressions, but it's simpler to follow a slightly stricter policy: a slash
+/followed/ by white space cannot be matched as the starting slash, regardless of
+what preceded it.
 
 We'll use a /negated lookahead/ pattern `(?!\s)` after the initial character
-(which just means that match `/` only if not followed by `\s`:
+(which means 'match `/` only if not followed by `\\s`'):
 
 		var pattern = /\B\/(?!\s)(.*?)\/\B/g;
 
-The ending slash follows a similar rule in the other direction: white space may
-not precede it.
+The ending slash should follow a similar rule in the other direction: white
+space may not precede it.
 
 		var pattern = /\B\/(?!\s)(.*?[^\s])\/\B/g;
 
@@ -202,9 +192,9 @@ The replacement will have to be changed to
 so we don't lose a character.
 
 And the URL case will be handled by also avoiding `:` and `\/` before the
-starting `\/`:
+starting and ending `\/`:
 
-	var pattern = /([^<:\/]|^)\B\/(?!\s)([^]*?[^\s])\/\B/g;
+	var pattern = /([^<:\/]|^)\B\/(?!\s)([^]*?[^:\/\s])\/\B/g;
 
 A notable weakness in this notation is that we cannot discern pathnames like
 `It's located in /usr/share/lib/{dirname}` from genuine italicizations like
@@ -239,9 +229,8 @@ and take a simpler version of `italicize`, replacing slashes with asterisks:
 The tests pass; we are ready to move on, but not before noting a corner case
 that might warrant our attention: what happens if the user writes overlapping
 codes like `*this _sentence is* invalid_`?  A more robust markup language might
-do some error handling, but we don't -- instead we generate invalid HTML
-independent of the order of `boldify` and `italicize`.  If the user wants to
-shoot herself in the foot, let her do it.
+do some error handling, but we don't -- instead we generate invalid HTML.  If
+the user wants to shoot herself in the foot, let her do it.
 
 	assert.is(mk.boldify(mk.italicize('*this /sentence is* invalid/')), '<b>this <i>sentence is</b> invalid</i>');
 	assert.is(mk.italicize(mk.boldify('*this /sentence is* invalid/')), '<b>this <i>sentence is</b> invalid</i>');
@@ -256,7 +245,7 @@ We'll start with a special case: a link without an URL.  Since HTML5 allows
 	assert.is(mk.linkify('_previous_ and _next_'), '<a>previous</a> and <a>next</a>');
 
 And the function to recognize this is easily derived from the earlier ones: we
-only have to switch `\B` to `\b` since underscore is a word character.
+only have to switch `\\B` to `\\b` since underscore is a word character.
 
 	function linkify(text) {
 		var pattern = /\b_(?!\s)([^]*?[^\s])_\b/g;
@@ -267,14 +256,14 @@ Then we add support for the URL:
 
 	assert.is(mk.linkify('_Google_ (http://google.com/)'), "<a href='http://google.com/'>Google</a>");
 
-And for extra points make sure that the URL is quoted properly:
+And for extra points make sure that the URL is escaped properly:
 
 	assert.is(mk.linkify("_Google_ (http://google.com/?q=foo&x='abc')"), "<a href='http://google.com/?q=foo&amp;x=&#39;abc&#39;'>Google</a>");
 
 To satisfy these tests, the new `linkify` looks like:
 
 	function linkify(text) {
-*		var pattern = /\b_(?!\s)(.*?[^\s])_(?:\s*\((.*?)\)|\b)/g;
+*		var pattern = /\b_(?!\s)([^]*?[^\s])_(?:\s*\((.*?)\)|\b)/g;
 *		return text.replace(pattern, function(match, p1, p2) {
 *			var href = p2 ? " href='" + escape(p2)+ "'" : "";
 *			return '<a' + href + '>' + p1 + '</a>';
@@ -283,12 +272,12 @@ To satisfy these tests, the new `linkify` looks like:
 
 The regular expression is augmented to alternatively accept white space followed
 by a parenthesized URL.  Only the relevant parts of the pattern, the URL and the
-link text, are captured, and for the alternative form we use our old friend, the
-non-capturing parentheses `(?:x)`.  We use a non-greedy match for the URL to
-avoid capturing too much by accident.
+link text, are captured, and to group the parts we don't want to capture, we use
+our old friend, the non-capturing parentheses `(?:x)`.  We use a non-greedy
+match for the URL to avoid capturing too much by accident.
 
 We need to a different form of the `replace` function that takes a function and
-invokes it for each match.  We then perform the necessary translation and return
+invokes it for each match.  It performs the necessary translation and returns
 the desired result.
 
 The tests pass, but what about URLs that contain parentheses?  These are
@@ -302,11 +291,11 @@ to our test cases:
 
 Unfortunately, the power of regular expressions does not let us match an
 arbitrary number of symmetrical parentheses.  But we can do it for a given
-amount of nested parentheses.  This will get a complicated, again, so we'll
+amount of nested parentheses.  This will get complicated, so we'll
 develop the nested parentheses part separately.  
 
-Since angle brackets `<>` are much easier to read in regular expressions than
-the usual ones that must be escaped, we'll use them during construction and then
+Since angle brackets `<>` are easier to read in regular expressions than the
+usual ones that must be escaped, we'll use them during construction and then
 replace them with `\\(` and `\\)`.
 
 We'll do this construction by writing the regular expression in the `test` file
@@ -394,7 +383,7 @@ Now we can take a deep breath, take the abomination we just created, replace
 brackets with quoted parentheses, and replace the parentheses-matching part of
 the URL matcher with that.
 
-	var pattern = /\b_(?!\s)(.*?[^\s])_(?:\s*\(((?:[^\(\)]*\((?:[^\(\)]*\([^\(\)]*\))*[^\(\)]*\))*[^\(\)]*)\)|\b)/g;
+	var pattern = /\b_(?!\s)([^]*?[^\s])_(?:\s*\(((?:[^\(\)]*\((?:[^\(\)]*\([^\(\)]*\))*[^\(\)]*\))*[^\(\)]*)\)|\b)/g;
 
 With that, the URL with two levels of parentheses is matched correctly, but
 three levels fails:
@@ -423,31 +412,31 @@ And the implementation:
 		}
 
 
-## Finish the unfinished
+## What's missing?
 
-We note that code blocks that have blank lines in the middle get split up (even
-if they're indented with 4 spaces).  Understandable, given that the first thing
-we do is run `trim` to blank out all whitespace-only lines, and then use `\n\n`
-as a separator.  To make up for this, we join consecutive code blocks after
-splitting:
+We now find some deficiencies in our implementation.
+
+Code blocks that have blank lines in the middle get split up (even if they're
+indented with 4 spaces).  Understandable, given that the first thing we do is
+run `trim` to blank out all whitespace-only lines, and then use `\\n\\n` as a
+separator.  But not acceptable.  Consecutive code blocks need to be rejoined
+after splitting:
 
 	function mk(text) {
 		var preprocessed = untabify(trim(text));
-		var parts = split(preprocessed);
-*		parts = joinCodeBlocks(parts);
+*		var parts = joinCodeBlocks(split(preprocessed));
 		var converted = parts.map(handle);
 		return converted.join('\n') + '\n';
 	}
 
-`joinCodeBlocks` looks like:
+`joinCodeBlocks` joins the league of functions that are not particularly
+elegant, but work:
 
 	function joinCodeBlocks(parts) {
 		var result = [];
 		for (var i = 0, len = parts.length; i < len; i++) {
 			var part = parts[i];
 			if (result.length) {
-				if (type(part) == 'codeBlock') {
-				}
 				prevIdx = result.length - 1;
 				if (type(part) == 'codeBlock' && type(result[prevIdx]) == 'codeBlock') {
 					result[prevIdx] += '\n    \n' + part;
@@ -464,48 +453,37 @@ and a test for that:
 	assert.is(mk("    int x;\n    \n    x = 1;"), "<pre><code>int x;\n\nx = 1;</code></pre>\n");
 
 Another problem is that we can't yet quote backticks `\`` inside `<code>`
-expressions.  We'll need to change the approach for processing them.  Armed with
-a newly found enthusiasm for regular expressions, we decide to use them.  We'll
-first rewrite the current `codify`:
+expressions.  The current pattern isn't quite enough:
 
-	function codify(text) {
-		var pattern = /`([^`]*)`/g;
-		var codeBlocksEscaped = text.replace(pattern, function(match, p1) {
-			return '<code>' + escapeCode(p1) + '</code>';
-		});
+		var pattern = /`(.*?)`/g;
 
-		var restPattern = /(^|<\/code>)([^]*?)(<code>|$)/g;
-		return codeBlocksEscaped.replace(restPattern, function(match, p1, p2, p3) {
-			return p1 + escape(p2) + p3;
-		});
-	}
-
-It first takes apart blocks surrounded by backticks and wraps them in `<code>`
-tags.  Then it processes the text outside the code blocks, making sure that the
-non-greedy matcher (and the newline-accepting wildcard `[^]`) is used so that it
-won't accidentally escape a code block twice.  We trust that it works, since the
-tests pass, and write some tests that will fail:
+Let's first write some tests:
 
 	assert.is(mk('`\\``'), '<code>`</code>');
 	assert.is(mk('`\\`` `\\\\` `\\\\\\``'), '<code>`</code> <code>\\</code> <code>\\`</code>');
 
-We first implement the quoting part in `escapeCode`: we just replace `\\`
-followed by a character with that character:
+We'll change the pattern so it doesn't consume the combination `\\\``:
 
-			.replace(/\*/g, '&ast;')
-			.replace(/_/g, '&lowbar;')
-*			.replace(/\\(.)/g, '$1');
-}
-
-Next we change `codify` so it doesn't consume the combination `\\\``:
-
-		var pattern = /`([^\\`]*(?:\\.[^`\\]*)*)`/g;
+	function codify(text) {
+*		var pattern = /`([^\\`]*(?:\\.[^`\\]*)*)`/g;
+		return text.replace(pattern, function(match, p1) {
+*			return '<code>' + escapeCode(p1) + '</code>';
+		});
 
 Inside the outermost `\``s, we first read a string containing neither `\\`s nor
 `\``s.  When we encounter a `\\` followed by a character that it quotes, we
 consume it and the following a string that doesn't have `\``s or `\\`; and this
-we do N times, until we find the terminating `\``.  And so, quoting inside
-`<code>` blocks works.
+we do N times, until we find the terminating `\``.
+
+Codify will now use `escapeCode`, a slightly modified `escape` that strips off
+backslashes used for quoting:
+
+	function escapeCode(text) {
+		return escape(text)
+			.replace(/\\(.)/g, '$1');
+	}
+
+And so the tests pass again.
 
 Quoting will be useful also outside code elements:
 
@@ -513,74 +491,41 @@ Quoting will be useful also outside code elements:
 
 This necessitates a change in `codify`, again:
 
-	var pattern = /([^\\]|^)`([^\\`]*(?:\\.[^`\\]*)*)`/g;
-
-	var codeBlocksEscaped = text.replace(pattern, function(match, p1, p2) {
-		return p1 + '<code>' + escapeCode(p2) + '</code>';
-	});
+	function codify(text) {
+*		var pattern = /([^\\]|^)`([^\\`]*(?:\\.[^`\\]*)*)`/g;
+*		return text.replace(pattern, function(match, p1, p2) {
+*			return p1 + '<code>' + escapeCode(p2) + '</code>';
+		});
+	}
 
 Now it needs a non-backslash character (or the beginning of string) in front of
 it.  It will be inserted in front of the generated code block.
 
-We might also ask whether it's a good idea to process backslashes inside
-top-level code blocks.  After all, there's nothing that we need to escape
-there.  We decide to handle them separately from the normal code elements.
-
-	function escapeCode(text) {
-		return escapeCodeBlock(text).
-			.replace(/\\(.)/g, '$1');
-	}
-
-	function escapeCodeBlock(text) {
-		return text
-			.replace(/&/g, '&amp;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;')
-			.replace(/"/g, '&quot;')
-			.replace(/'/g, '&#39;')
-			.replace(/\//g, '&sol;')
-			.replace(/\*/g, '&ast;')
-			.replace(/_/g, '&lowbar;');
-	}
-
-and later:
-
-		codeBlock: function(element) {
-				...
-				if (!match) {
-*					return escapeCodeBlock(line);
-				}
-				if (match[1] == '*') {
-*					return "<b>" + escapeCodeBlock(match[2]) + "</b>";
-				} else {
-*					return escapeCodeBlock(match[2]);
-				}
-			}
-
-With that, the writing of this post suddenly became much easier.
+(Note that code blocks still use the normal `escape` -- there is no need to
+escape anything there.)
 
 ## Don't format what doesn't need formatting (i.e. HTML)
 
-Finally, we need to support inline HTML elements and _character references_
-(http://developers.whatwg.org/syntax.html#syntax-charref).  We create a new
-function `normalText`, which is called for non-`<code>` text, and called from
-`codify`.  It will eventually handle inline HTML elements as well, but we start
-with the character references.
+Finally, we need to support inline HTML elements and character references. For
+that, `normalText` must be modified.  Let's start with the character references
+and filter the text through `escapeSome`.
 
 	function normalText(text) {
-		return escapeSome(text);
+*		var escaped = escapeSome(text);
+		return dashify(linkify(boldify(italicize(escaped))));
 	}
 
 `escapeSome` first runs the input through `escape`, and then, knowing that all
 ampersands were turned into `&amp;`, finds out the sequences that were
-character references once:
+_character references_ (http://developers.whatwg.org/syntax.html#syntax-charref)
+once:
 
 	function escapeSome(text) {
 		var escapedCharacterReference = /&amp;(#(?:x?[0-9]+)|(?:[a-zA-Z]+?));/gi;
 		return escape(text).replace(escapedCharacterReference, '&$1;');
 	}
 
-This feels like a hack but works.  A test to exercise the different character
+This feels like a hack but, again, works.  A test to exercise the different character
 references:
 
 	assert.is(mk.filter('&#123;, &RightUpVector;, &#x2020;, but &auml'),
@@ -590,11 +535,11 @@ HTML tags are a bit more work.  We're not interested in the tags themselves: we
 want things like `<a data-whatever='*stuff*'>` to pass as-is, and the text in
 between them to be escaped.  So we use a similar technique as we did with
 `codify` to replace the text that is delimited by HTML tags.  (Strictly
-speaking, this is not enough; ideally we'd like attribute values like
-`href='/?a=1&c=2'` to be escaped, but Markdown doesn't do this either.  Perhaps
+speaking, this is not enough; ideally we'd also like attribute values like
+`href='/?a=1&c=2'` to be escaped, but Markdown doesn't do this either.  So perhaps
 it's better to keep in the "HTML is HTML" mindset.)
 
-Deciphering the syntax for HTML start tags a while, we find the following:
+Deciphering the syntax for _HTML start and end tags_ (http://developers.whatwg.org/syntax.html#start-tags) a while, we find the following:
 
 A HTML start tag ends with a `>`, preceded by optional `/`, optional whitespace,
 and either a tag name (alphanumeric), an attribute name, or an attribute value.
@@ -603,18 +548,27 @@ the null character): `"'>/=`.  Attribute values, quoted or unquoted, may end
 with anything except the following characters: `=<>\``.  Thus the last character
 before the optional whitespace may be anything except an `=` or a `>`.  Although
 the validators that I checked didn't allow `<` in attribute names, either, so
-let's include that as well.
+let's include that as well.  So this pattern matches the possible endings of a
+tag:
 
-A HTML end tag isn't any different for our purposes.
+	[^=<>]\s*>
 
-A HTML tag, on the other hand, always starts with a `<`, followed by an optional
-`/` (which makes it an end tag) and an element name.  But we must avoid matching
-the element name, so that it can be part of the next match.  Consider the case
-`<span>&<i>&<b>` -- we must take care so that the end of the first match doesn't
-overlap the beginning of the next match.  Therefore we use our old friend,
-the word boundary character `\b`.
+(We don't have to take into account the optional slash separately, since this
+pattern matches `/>` already.)
 
-So here's a pattern for matching text between HTML tags:
+A HTML end tag always ends with `/>`, and is therefore caught by the previous
+pattern as well.
+
+To match the start of a HTML tag, we look for a `<`, followed by an optional `/`
+(which makes it an end tag) and an element name.  But we must avoid matching the
+element name, so that it can be part of the next match.  Consider the case
+`<span>&<i>&<b>` -- we must take care that the end of the first match doesn't
+overlap the beginning of the next match.  The word boundary character `\b` comes
+to rescue.  Here's the pattern, then:
+
+	<\/?\b
+
+So here's a pattern for matching text outside HTML tags:
 
 		var betweenPattern = /(^|[^=<>]\s*>)([^]*?)(<\/?\b|$)/g;
 
@@ -626,20 +580,8 @@ and `escapeText` in whole:
 
 		return text.replace(betweenPattern, function(match, p1, p2, p3) {
 			var betweenText = escapeSome(p2);
-			return p1 + format(betweenText) + p3;
+			return p1 + dashify(linkify(boldify(italicize(betweenText)))) + p3;
 		});
-	}
-
-The function `format`, then, ties everything else together:
-
-*	function format(text) {
-*		return dashify(linkify(boldify(italicize(text))));
-*	}
-
-And the `filter` function simply reduces to:
-
-	function filter(text) {
-*		return codify(text);
 	}
 
 We can now enable the previously disabled test and write some more:
@@ -651,9 +593,24 @@ We can now enable the previously disabled test and write some more:
 The HTML tag recognizer is not terribly strong, so it's quite possible that it
 matches non-tags, too:
 
-	assert.is(mk.filter("if 0<x, I'm going to make this face >_<..."), "if 0<x, I'm going to make this face >_&lt;...");
+	assert.is(mk.filter("if 0<x, I'm *so* going to make this face >_< - I /am/"), "if 0<x, I'm *so* going to make this face >_&lt; - I <i>am</i>");
 
-Will it be a common problem?  Time will tell.
+In this case, it thinks that everything between `<x` and `face >` is a HTML tag
+and leaves its content unprocessed.  Whether this will cause terrible problems
+remains to be seen.
+
+## If we had just used Markdown
+
+We might have just taken _marked_ (https://npmjs.org/package/marked), a popular
+implementation of Markdown, out of the box and used it.  Indeed, Markdown is a
+stable language, and `marked` is a stable Markdown processor optimized for
+speed.
+<span class=aside>In my tests, `marked` is about twice as fast: it
+processed a 48kB test input in 3.1 milliseconds, while `mk` spent 6.9
+milliseconds.  So there's some room for optimization.</span>
+(In addition, it has things like sanitization and _GFM features_
+(http://github.github.com/github-flavored-markdown/).) But then again, we wanted
+a bespoke lightweight markup language, and that's what we've got.
 
 ## Conclusion
 
@@ -667,6 +624,7 @@ our implementation will converge to a more or less bug-free one.
 
 * Make sure that the tests are run in production as well. Is this a good idea
 to do during the deployment, or whenever the server is started?
+* Some performance testing
 * Implement list items that can span multiple lines:
 
     * This line contains a long description that wants to extend to the next line,
@@ -674,7 +632,8 @@ to do during the deployment, or whenever the server is started?
     * And here is the second item.
 
 * Implement nested list items.
-* Test that `filter` and `escapeCode` are used where they should be.
+* Write a function that writes a RegExp that recognizes a given number of nested
+parentheses.
 * Make it possible to escape `*`, `_`, `(`, `)` and `/` outside `<code>`
 elements.
 

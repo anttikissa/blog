@@ -357,19 +357,14 @@ inequality signs brackets in `if value < a but a > 0`, but not in `<a
 href='#'>link text a</a>`.)
 
 We forget HTML quoting for a moment and implement `filter` and `escapeCode` in
-`lib/mk.js` with straightforward ones:
+`lib/mk.js` with a really straightforward one:
 
 	function filter(text) {
 		return escape(text);
 	}
 
-	function escapeCode(text) {
-		return escape(text);
-	}
-
 We add some tests we expect to pass:
 
-	assert.is(mk.escapeCode("<h1 class='foo'>One & two</h1>"), "&lt;h1 class=&#39;foo&#39;&gt;One &amp; two&lt;/h1&gt;");
 	assert.is(mk.filter('X & Y'), 'X &amp; Y');
 	assert.is(mk.filter('a < b'), 'a &lt; b');
 
@@ -379,7 +374,7 @@ problem later:
 	//assert.is(mk.filter('yes &ndash; no &amp; &'), 'yes &ndash; no &amp; &amp;');
 	//assert.is(mk.filter("0 <a href='/get?x=1&y=2'>link</a>"), "0 <a href='/get?x=1&amp;y=2'>link</a>");
 
-Then we'll start using `filter` and `escapeCode` in the proper places (`lib/mk.js`:)
+Then we'll start using `filter` in the proper place (`lib/mk.js`:)
 
 	function li(item, prefix) {
 		var content = item.replace(prefix, '');
@@ -400,12 +395,12 @@ Then we'll start using `filter` and `escapeCode` in the proper places (`lib/mk.j
 		codeBlock: function(element) {
 			...
 				if (!match) {
-*					return escapeCode(line);
+*					return escape(line);
 				}
 				if (match[1] == '*') {
-*					return "<b>" + escapeCode(match[2]) + "</b>";
+*					return "<b>" + escape(match[2]) + "</b>";
 				} else {
-*					return escapeCode(match[2]);
+*					return escape(match[2]);
 				}
 
 Now the big things should work;  try running the code with code blocks, lists,

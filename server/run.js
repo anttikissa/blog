@@ -3,6 +3,7 @@
 var http = require('http');
 var fs = require('fs');
 var mk = require('../lib/mk');
+var marked = require('marked');
 
 var env = process.env.BLOG_ENV == 'dev' ? 'dev' : 'prod'
 
@@ -15,13 +16,13 @@ log("Server starting, env: " + env);
 var filenames = fs.readdirSync(__dirname + "/../posts");
 
 var postFiles = filenames.filter(function(filename) {
-	return filename.match(/^\d+(\.txt)?$/);
+	return filename.match(/^\d+(\.txt|\.md)?$/);
 }).map(function(filename) {
-	var match = filename.match(/^(\d+)(\.txt)?$/);
+	var match = filename.match(/^(\d+)(\.txt|\.md)?$/);
 	return {
 		id: match[1],
 		filename: filename,
-		type: match[2] == '.txt' ? 'mk' : 'html'
+		type: match[2] == '.txt' ? 'mk' : match[2] == '.md' ? 'md' : 'html'
 	};
 });
 
@@ -44,17 +45,24 @@ function formatDate(date) {
 }
 
 function filter(post, type, filename) {
+	var result = post;
+
+	var start = new Date();
+//	var count = 1000;
+	var count = 1;
 	if (type == 'mk') {
-		var start = new Date();
-		for (var i = 0; i < 1; i++) {
-			var result = mk(post);
+		for (var i = 0; i < count; i++) {
+			result = mk(post);
 		}
-		var end = new Date();
-		log("formatting post " + filename + " took " + (end - start) + " ms");
-		return result;
-	} else {
-		return post;
+	} else if (type == 'md') {
+		for (var i = 0; i < count; i++) {
+			result = marked(post);
+		}
 	}
+
+	var end = new Date();
+	log("formatting post " + filename + " took " + (end - start) + " ms");
+	return result;
 }
 
 function readPost(filename, type) {
