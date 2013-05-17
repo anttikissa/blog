@@ -3,7 +3,6 @@
 var http = require('http');
 var fs = require('fs');
 var mk = require('../lib/mk');
-var marked = require('marked');
 
 var env = process.env.BLOG_ENV == 'dev' ? 'dev' : 'prod'
 
@@ -48,17 +47,9 @@ function filter(post, type, filename) {
 	var result = post;
 
 	var start = new Date();
-//	var count = 1000;
-	var count = 1;
 	if (type == 'mk') {
-		for (var i = 0; i < count; i++) {
-			result = mk(post);
-		}
-	} else if (type == 'md') {
-		for (var i = 0; i < count; i++) {
-			result = marked(post);
-		}
-	}
+		result = mk(post);
+	} 
 
 	var end = new Date();
 	log("formatting post " + filename + " took " + (end - start) + " ms");
