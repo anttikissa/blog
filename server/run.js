@@ -91,12 +91,17 @@ function listener(req, res) {
 					res.writeHead(404);
 					res.end("Not found");
 				} else {
-					var filetype = 'text/plain';
 					if (req.url.match(/\.png$/)) {
-						filetype = 'image/png';
+						var contentType = 'image/png';
+					} else if (req.url.match(/\.css$/)) {
+						var contentType = 'text/css; charset=utf-8';
+					} else {
+						var contentType = 'text/plain';
 					}
 
-					res.writeHead(200);
+					res.writeHead(200, {
+						'Content-Type': contentType
+					});
 					res.end(data);
 				}
 		 	});
@@ -150,8 +155,9 @@ function postscript(id) {
 }
 
 var server = http.createServer(listener);
-server.listen(3000);
-log("Listening at port 3000.");
+var port = 3000;
+server.listen(port);
+log("Listening http://localhost:" + port + "/");
 
 if (env == 'dev') {
 	setTimeout(function() {
