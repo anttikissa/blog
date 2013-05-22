@@ -1,12 +1,35 @@
 body {
 	color: #282828;
 	background: #fdfdfd;
-	font-family: Palatino, "Palatino Linotype";
+	font-size: 16px;
+	line-height: 24px;
+	font-family: 'StempelGaramondW04-Roma', 'Hoefler Text', 'Adobe Caslon Pro', Palatino, "Palatino Linotype", serif;
+	text-rendering: optimizeLegibility;
+	-webkit-font-feature-settings: 'kern';
 }
+
+i {
+	font-family: 'StempelGaramondW01-Ital';
+	font-style: normal;
+}
+
+p, time, h1, h2, h3, h4 {
+	-webkit-font-feature-settings: 'liga';
+}
+
+time {
+	-webkit-font-feature-settings: 'onum';
+}
+
+.num {
+	-webkit-font-feature-settings: 'onum';
+}
+
 body, div, p, ol, ul, li, h1, h2, h3 {
 	margin: 0;
-	font-size: 16px;
+	font-size: 17px;
 }
+
 body {
 	line-height: 24px;
 	width: 575px;
@@ -20,9 +43,16 @@ pre {
 	width: 867px;
 }
 code, pre.code {
-	font-family: 'Courier New';
+	font-family: 'Source Code Pro', 'Courier New', monospace;
+	font-weight: 300;
 	font-size: 15px;
 }
+
+code b, pre.code b {
+	color: black;
+	font-weight: 500;
+}
+
 h1 {
 	font-size: 24px;
 	font-weight: normal;
@@ -41,9 +71,11 @@ h1 {
 h1 + time {
 	margin-top: -24px;
 	display: block;
-	font-size: 14px;
-	font-variant: small-caps;
-	letter-spacing: 1px;
+	font-size: 16px;
+}
+h2 {
+	-webkit-font-feature-settings: 'smcp';
+	font-size: 17px;
 }
 blockquote {
 	margin: 24px 50px;
@@ -85,10 +117,6 @@ ul, ol {
 	padding: 0 0 0 50px;
 }
 
-code, pre {
-	background: #f3f3f3;
-}
-
 pre {
 	padding: 1px 4px 0 4px;
 	margin-top: -2px;
@@ -97,7 +125,6 @@ pre {
 code, pre.code {
 	padding: 0 2px;
 	line-height: 18px;
-	border-top: 3px solid #f3f3f3;
 	color: #456;
 }
 
