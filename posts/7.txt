@@ -599,16 +599,18 @@ In this case, it thinks that everything between `<x` and `face >` is a HTML tag
 and leaves its content unprocessed.  Whether this will cause terrible problems
 remains to be seen.
 
-## If we had just used Markdown
+## Had we just used Markdown
 
 We might have just taken _marked_ (https://npmjs.org/package/marked), a popular
 implementation of Markdown, out of the box and used it.  Indeed, Markdown is a
 stable language, and `marked` is a stable Markdown processor optimized for
 speed.
-<span class=aside>In my tests, `marked` is about twice as fast: it
-processed a 48kB test input in 3.1 milliseconds, while `mk` spent 6.9
-milliseconds.  So there's some room for optimization.</span>
-(In addition, it has things like sanitization and _GFM features_
+
+It would have been faster, stabler, and no fun at all.  But Markdown provides a
+good performance target.  <span class=aside>In my tests, `marked` is about twice
+as fast: it processed a 48kB test input in 3.1 milliseconds, while `mk` spent
+6.9 milliseconds.  So there's some room for optimization.</span> (In addition,
+it has things like sanitization and _GFM features_
 (http://github.github.com/github-flavored-markdown/).) But then again, we wanted
 a bespoke lightweight markup language, and that's what we've got.
 

@@ -1,0 +1,32 @@
+# On baseline grids
+
+<time datetime='2013-01-13T16:19:42.979Z'></time>
+
+Some people, including authorities on typography such as Robert Bringhurst,
+extol the virtues of maintaining a consistent vertical rhythm within a text.  By
+this we mean that the text aligns on a baseline grid;  and even though we
+deviate from this rhythm temporarily, say because of a quote or a subheading, we
+should catch the exact same rhythm when resuming the running text.
+
+This is illustrated on the _Typecast blog_
+(http://typecast.com/blog/4-simple-steps-to-vertical-rhythm).
+
+Thus, the mantra goes, we should _add or delete vertical space in measured
+intervals_
+(http://www.webtypography.net/Rhythm_and_Proportion/Vertical_Motion/2.2.2/),
+including headings and subheadings where the font size and leading might be
+different.
+
+The problem arises from the fact that /if/ the leading of a heading is different
+than the baseline measure, we'll have to restrict ourselves to a certain amount
+of lines in headings if we wish to not disturb the vertical rhythm.
+
+People are taking Bringhurst's advice (that is primarily intended for print
+media) literally and applying it to the web, not taking into account that the
+two media are different in nature.  First, if you design for print media, it
+makes sense to make the page height a multiple of the leading and lay out the
+text using the baseline grid.  Second, in print you usually have one or more
+columns next to each other; in the case of books, you have two facing pages next
+to each other.  A musical analogy would be two or more melodies playing at the
+same time; the harmony is maximised when the two are in sync.
+

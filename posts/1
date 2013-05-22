@@ -1,7 +1,7 @@
 <h1>Hello World</h1>
 <time datetime='2012-12-16T10:50:19.000Z'></time>
 
-<p>So, let's make a blog from scratch in Node.js.
+<p>So, let's write a blog engine from scratch in Node.js.
 
 <h2>Underlying philosophy</h2>
 
@@ -12,7 +12,7 @@ avoiding external modules where possible.  That means we'll reinvent the wheel a
 couple of times.  The reader is encouraged to do the same, or to find out how to
 use previously invented wheels instead.
 
-<h2>So, let's get started.</h2>
+<p>Now, let's get started.
 
 <p>Here's a spec for our starting point, a minimal blog app:
 

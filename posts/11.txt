@@ -1,0 +1,232 @@
+# Destructuring assignments -- when does it make sense?
+
+<time datetime='2013-02-03T07:04:00.000Z'></time>
+
+Efficient? <span class=num>1234</span>.
+
+Testing some `code: 1 + 2 * 3 = 123.456e+03`.  That's it.
+
+Destructuring assignments of JavaScript, CoffeeScript and other languages make
+it possible to declare variables as if they were part of a larger data
+structure, and then do the necessary matching to extract the required piece from
+an existing data structure.  For example:
+
+	// Sets a to 1 and b to 2
+	[a, b] = [1, 2]
+
+Other data structures work, too:
+
+	// Sets x to 1 and z to 2.
+	{ x, y: { z } } = { x: 1, y: { z: 2 }}
+
+The idea for the syntax for this resembles how pointers are defined in C.  The
+left hand side, if it were evaluated after the assignment, would give the same
+result as the right hand side.
+
+So, how does this generalize?
+
+For one, you could implement "destructuring" for simple arithmetic:
+
+	// Sets x to 1.
+	x + 1 = 2
+
+	// Sets x to 2
+	x * 2 = 4
+
+	// How about this?
+	// Possible solutions are x = 3 and x = -3.
+	x * x = 9
+
+	// Or one of these?
+	x % 4 = 3
+	sin(x) = 0.0
+	0 * x = 0
+
+For cases where there are multiple answers, we could either pick one by random
+(indeed, `Math.random()` could be /defined/ as `0 * x = 0; x`) or alternatively
+treat `x` as a generator which yields a different value every time it is
+accessed.
+
+There's probably a some academic value in that, but let's consider some more
+realistic alternatives.
+
+* if x doesn't match the form, what then?
+
+JavaScript/CoffeeScript currently require that the form matches exactly, or a
+runtime error is produced.  But there is value in matching the form optionally,
+and using the information about whether it matched to make a decision:
+
+For example, an assembler:
+
+	instruction = line.trim().split(/\s+/)
+
+	if (['mov', target, source] = instruction) {
+		// handle 'mov'
+	} else if (['add', target, lhs, rhs] = instruction) {
+		// handle 'add'
+	} ...
+
+In fact, here's a generalization of `switch` (much like in Haskell, etc.):
+
+	switch (instruction) {
+		case ['mov', target, source]:
+			...
+		case ['add', target, lhs, rhs]:
+			...
+	}
+	
+* string interpolation
+
+If we can do this:
+
+	var str = "Variable foo is $foo";
+
+why not do this:
+
+	"$name.png" = filename;
+
+which would trigger a regular expression match for /(.*)\.png/.
+Of course, we need to figure out what this means:
+
+	"$name.$extension" = filename;
+
+Now does "foo.bar.txt" split into "foo.bar" and "txt" or "foo" and "bar.txt"?
+Perhaps we should be able to write the regular expression ourselves, using a
+hypothetical syntax:
+
+	/(.*$name)\.(.*$extension)/ = "foo.bar.txt";
+
+Which would result in "foo.bar" and "txt".  And if you wanted otherwise, you
+could do
+
+	/(.*?$name)\.(.*$extension)/ = "foo.bar.txt";
+
+* extracting parts of a binary representation
+
+	// Extract bits 4-7 to x
+	0b00000000$(x)0000 = 0x00ff;
+
+I'm not sure how feasible that syntax is, looks a bit odd.
+
+* data structures (other than lists and maps)
+
+If you have a tree or some other kind of data structure without native support,
+how would you write matchers for it?
+
+Let's start simple.  Suppose you write a function
+
+	fn pair(x, y) = [x, y]
+
+and then you'd like to say things like
+
+	pair(1, x) = [1, 2]
+
+or
+
+	pair(x, 1) = [1, 2]
+
+or
+
+	pair(x, y) = [1, 2]
+
+Then you'd need to write a matcher for every case:
+
+	bool pair_match(value, x, out y) {
+		if (x == value[0]) {
+			y = value[1];
+			return true;
+		}
+		return false;
+	}
+
+	bool pair_match(value, out x, y) {
+		if (y == value[1]) {
+			x = value[0];
+			return true;
+		}
+		return false;
+	}
+
+	bool pair_match(value, out x, out y) {
+		// Use the native matcher
+		[x, y] = value;
+		return true;
+	}
+
+Actually, why not support fully constant matchers even though the idea is silly:
+
+	bool pair_match(value, x, y) {
+		return [x, y] == value;
+	}
+
+This would in practice always degenerate to equality comparison.  How would you
+use it?
+
+	pair(1, 2) = value;
+
+Doesn't really seem that useful, except with `switch`:
+
+	switch (p) {
+		case pair(0, 0):
+			// special case
+		case pair(x, 0):
+			// something
+		case pair(1, y):
+			// something
+		case pair(2, y):
+			// something else
+		case pair(x, y):
+			// catch-all
+	}
+
+Note that the order matters; value `pair(1, 0)` would be caught by pattern
+`pair(x, 0)`.
+
+Now let's consider that with static typing:
+
+	type Pair<T, U> {
+		init(T a, U b) { @a = a; @b = b; }
+		T a;
+		U b;
+
+		bool match(in Pair& p, T& a, U& b) {
+			a = p.a;
+			b = p.b;
+			return true;
+		}
+
+		bool match(in Pair& p, T& a, U b) {
+			if (p.b == b) {
+				a = p.a;
+				return true;
+			}
+			return false;
+		}
+
+		bool match(in Pair& p, T a, U& b) {
+			...
+		}
+		// etc
+	}
+
+
+	var p = Pair(1, "xyz");
+	Pair(1, str) = p;
+	// calls Pair.match(Pair&, int, String&) with p, 1 and str. Before that, it
+	// has generated `String str` (it's not totally clear where it finds that
+	// type from, but it must find it somewhere because it would be stupid to be
+	// forced to type `Pair<int, String> = p`.)
+	// Actually, the call is just String str; Pair.match(p, 1, str);
+	// We need to distinguish const and non-const arguments (I used `in` above
+	// for a `const argument`) in this language, like C++ does.
+
+That syntax seems a bit evil since what actually happens depends on whether the
+name `str` exists.
+
+If you introduce a global `str`, you'll get a different result (probably error)
+since you'll just try to generate a Pair literal and then assign to that.
+
+Perhaps the syntax needs to be `Pair(1, var str) = p;`.  But that's strange.
+Maybe `Pair(1, $str) = p;`  But that looks like PHP.  Then again, it would look
+a bit like string interpolation.
+

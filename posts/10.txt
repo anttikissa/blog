@@ -1,0 +1,55 @@
+# Modifying the keyboard layout in OS X 
+
+<time datetime='2013-01-30T16:09:42.979Z'></time>
+
+This may be useful to you if you like to use the U.S. keyboard layout on OS X,
+but need some keys from another layout (Finnish in my case).  Or perhaps you
+just want to have quick access to some typographically fancy characters that
+your current keyboard layout doesn't support.  Like ☞ these ☜.
+
+I spent a while researching how to do this, so you wouldn't have to.
+
+## The issue
+
+The Finnish keyboard layout on OS X sucks.  As someone who grew up with the
+Finnish PC layout, I find the placement of characters such as `[]{}\\|`
+intolerable.  However, in Finnish you often need the characters å, ä (and
+occasionally å), which have a prominent place on the Finnish keyboard.  (And the
+Swedish keyboard, which happens to be the same.)
+
+So I mainly used to use the U.S. keyboard, and switched to the Finnish one
+occasionally.  This was suboptimal, since at any time the keyboard could be at
+the wrong setting, causing little annoyances.
+
+I decided to change my U.S. keyboard layout to generate å, ä and ö if I hold the
+alt key<sup>†</sup> <span class=aside>† officially known as the "Option key", which is strange
+when the text on the key reads "alt".</span> while pressing the same keys that
+in the Finnish keyboard layout would generate them.
+
+This is how you'd do it:
+
+Download _Ukelele_
+(http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=ukelele).
+
+Open it, select File -> New From Current Input Source
+
+Mapping the keys is a bit difficult; for each key combination, you:
+
+* click Keyboard -> Edit Key
+* select "Ok"
+* click the key you want to remap, with modifiers (such as `Option-'`, which I'm
+  planning to map to ä)
+* type in the output (in this case, `ä`)
+
+Once you've mapped what you need to map, save the keylayout to your home
+directory and move it to `Library/Keyboard Layouts` using the terminal:
+
+	> cp US_with_aao.keylayout Library/Keyboard\ Layouts/
+
+Now you can go to System Preferences -> Keyboard -> Input Sources and forget the
+other keyboards.
+
+If you're Finnish (or Swedish), you may find my keyboard layout useful:
+
+TODO download it here
+

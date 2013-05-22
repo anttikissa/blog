@@ -1,0 +1,54 @@
+# Farewell to `<pre><code>`
+
+<time datetime='2013-01-11T15:49:45.000Z'></time>
+
+A popular way to express a code listing in HTML is to wrap it inside `<pre>` and
+`<code>` elements.  For example, here's the canonical C program:
+
+	#include <stdio.h>
+
+	int main() {
+		printf("Hello world!\n");
+		return 0;
+	}
+
+To show that on a web page, we write the following HTML:
+
+	<pre><code>#include <stdio.h>
+
+		int main() {
+			printf("Hello world!\n");
+			return 0;
+		}
+	</code></pre>
+
+This works, but has two downsides: 
+
+* It requires the nesting of `<pre>` and `<code>` tags, which is ugly semantically
+* It requires that the alignment of the first line is different from the others,
+  which is ugly visually.
+
+So from now on, I (and my _markup language_
+(http://github.com/anttisykari/mk)) am going to write this instead:
+
+	<pre class='code'>
+	#include <stdio.h>
+	int main() {
+		printf("Hello world!\n");
+		return 0;
+	}
+	</pre>
+
+This 
+
+* is not longer than the alternative (in fact, both have the same overhead),
+* is more readable when viewing the source (we can put a a newline immediately
+  after `<pre>` and _it will be stripped_
+  (http://developers.whatwg.org/grouping-content.html#the-pre-element), and
+* uses only one HTML element, which seems less wasteful
+
+Arguably, `<pre><code>` is precisely what the HTML5 standard recommends -- I
+suspect because it's a popular way to mark up code blocks.  But then again,
+standards are like the government -- one shouldn't look up at them with too much
+reverence.
+
