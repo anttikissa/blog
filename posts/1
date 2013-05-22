@@ -168,9 +168,8 @@ code.  (The code is at <a href='http://github.com/anttisykari/blog'>GitHub</a>.)
 <h2>Exercises</h2>
 
 <ul>
-	<li>Find out the difference between synchronous methods (such as <code>fs.readFileSync</code>)
-	and asynchronous ones (<code>fs.readFile</code>).  Node.js usually
-	encourages you to use the asynchronous ones.  Why?
+	<li>Why didn't we bother with asynchronous methods (such as <code>fs.readFile</code>) and instead went with the synchronous ones (such as <code>fs.readFileSync</code>)?
+
 	<li>Find out what <code>__dirname</code> is and why you should use it.
 	Learn about the <code>path</code> module and why you might want to user
 	<code>path.join</code> instead of just concatenating strings.
