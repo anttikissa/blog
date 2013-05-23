@@ -2,7 +2,8 @@
 
 var http = require('http');
 var fs = require('fs');
-var mk = require('../lib/mk');
+// var mk = require('../lib/mk');
+var pretext = require('pretext');
 
 var env = process.env.BLOG_ENV == 'dev' ? 'dev' : 'prod'
 
@@ -48,7 +49,7 @@ function filter(post, type, filename) {
 
 	var start = new Date();
 	if (type == 'mk') {
-		result = mk(post);
+		result = pretext(post);
 	} 
 
 	var end = new Date();
