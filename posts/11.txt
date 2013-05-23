@@ -1,10 +1,16 @@
-# Destructuring assignments -- when does it make sense?
+# Generalized destructuring assignment
 
 <time datetime='2013-02-03T07:04:00.000Z'></time>
 
 Efficient? <span class=num>1234</span>.
 
 Testing some `code: 1 + 2 * 3 = 123.456e+03`.  That's it.
+
+	A code block with a
+*	line that is bolded
+	And a line that is not?
+
+Testing /some italics here/, I we might. And *how about some bold?*
 
 Destructuring assignments of JavaScript, CoffeeScript and other languages make
 it possible to declare variables as if they were part of a larger data
