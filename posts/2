@@ -126,7 +126,7 @@ pixels.  These values come from a grid with 110px columns and 22px gutters:
 Lists and blockquotes demand some indentation; we use multiples of the base unit
 (22 pixels).
 
-<p>The <code>&lt;h1&ht;</code> element needs some adjustment to fall on the same
+<p>The <code>&lt;h1&gt;</code> element needs some adjustment to fall on the same
 baseline grid with the other text.
 
 <pre><code>    h1, p, ul, ol, pre, footer {
