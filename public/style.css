@@ -5,12 +5,19 @@ body {
 	line-height: 24px;
 	font-family: 'StempelGaramondW04-Roma', 'Hoefler Text', 'Adobe Caslon Pro', Palatino, "Palatino Linotype", serif;
 	text-rendering: optimizeLegibility;
+	/* TODO firefox & other browsers */
 	-webkit-font-feature-settings: 'kern';
 }
 
 i {
 	font-family: 'StempelGaramondW01-Ital';
 	font-style: normal;
+}
+
+b {
+	font-weight: normal;
+	/* Change to real bold if eventually needed */
+	text-decoration: underline;
 }
 
 p, time, h1, h2, h3, h4 {
@@ -51,15 +58,19 @@ code, pre.code {
 code b, pre.code b {
 	color: black;
 	font-weight: 500;
+	text-decoration: none;
 }
 
 h1 {
 	font-size: 24px;
 	font-weight: normal;
 }
+
 h2, h3 {
 	font-size: 16px;
+	font-weight: normal;
 }
+
 h1, h2, p, ul, ol, pre, footer {
 	margin: 24px 0;
 }
