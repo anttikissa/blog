@@ -97,7 +97,7 @@ We check that a sequence of italics work:
 	assert.is(mk.italicize('/a/ /b/ /c/ /d/'), '<i>a</i> <i>b</i> <i>c</i> <i>d</i>');
 
 Also inside parentheses and other punctuation (and outside, even though that's
-against the typographical convention):
+against the typographical convention (TODO insert Bringhurst reference)):
 
 	assert.is(mk.italicize('(/This, too/.)'), '(<i>This, too</i>.)');
 	assert.is(mk.italicize('/(This, too.)/'), '<i>(This, too.)</i>');

@@ -48,7 +48,6 @@ This
 * uses only one HTML element, which seems less wasteful
 
 Arguably, `<pre><code>` is precisely what the HTML5 standard recommends -- I
-suspect because it's a popular way to mark up code blocks.  But then again,
-standards are like the government -- one shouldn't look up at them with too much
-reverence.
+suspect because it's a popular way to mark up code blocks.  On with the
+revolution, then!
 
