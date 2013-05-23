@@ -1,0 +1,28 @@
+{
+  "name": "blog",
+  "version": "0.0.0",
+  "description": "Antti's blog",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {
+    "pretext": "~0.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "./test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/anttisykari/blog.git"
+  },
+  "keywords": [
+    "antti",
+    "blog"
+  ],
+  "author": "Antti Sykäri",
+  "license": "BSD",
+  "readmeFilename": "README.md",
+  "gitHead": "c0209b4db66f2d8c726dcaefe285eb57f5d5c255"
+}
