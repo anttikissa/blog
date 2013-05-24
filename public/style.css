@@ -2,7 +2,7 @@ body {
 	color: #282828;
 	background: #fdfdfd;
 	font-size: 16px;
-	line-height: 24px;
+	line-height: 25px;
 	font-family: 'StempelGaramondW04-Roma', 'Hoefler Text', 'Adobe Caslon Pro', Palatino, "Palatino Linotype", serif;
 	text-rendering: optimizeLegibility;
 	/* TODO firefox & other browsers */
@@ -24,6 +24,11 @@ p, time, h1, h2, h3, h4 {
 	-webkit-font-feature-settings: 'liga';
 }
 
+code {
+	/* Does not work.  Sorry everybody. */
+	-webkit-font-feature-settings: 'liga' 0;
+}
+
 time {
 	-webkit-font-feature-settings: 'onum';
 }
@@ -38,7 +43,7 @@ body, div, p, ol, ul, li, h1, h2, h3 {
 }
 
 body {
-	line-height: 24px;
+	line-height: 25px;
 	width: 575px;
 	margin: 0 auto;
 }
@@ -49,6 +54,7 @@ img {
 pre {
 	width: 867px;
 }
+
 code, pre.code {
 	font-family: 'Source Code Pro', 'Courier New', monospace;
 	font-weight: 300;
@@ -61,10 +67,35 @@ code b, pre.code b {
 	text-decoration: none;
 }
 
+pre.code {
+
+	border-radius: 2px;
+	border-left: 1px solid #c8c8c8;
+	padding-left: 10px;
+	margin-left: -10px;
+	background: #fafafa;
+
+	border-top: 1px solid #c8c8c8;
+	padding-top: 10px;
+	margin-top: -2px;
+	border-bottom: 1px solid #e2e2e2;
+	padding-bottom: 10px;
+	margin-bottom: -2px;
+
+	border-right: 1px solid #e2e2e2;
+
+	line-height: 20px;
+}
+
 h1 {
-	font-size: 24px;
+	font-size: 25px;
 	font-weight: normal;
 }
+
+h1 code {
+	font-size: 20px;
+}
+
 
 h2, h3 {
 	font-size: 16px;
@@ -72,7 +103,7 @@ h2, h3 {
 }
 
 h1, h2, p, ul, ol, pre, footer {
-	margin: 24px 0;
+	margin: 25px 0;
 }
 h1 {
 	margin-top: 52px;
@@ -80,7 +111,7 @@ h1 {
 	top: -2px;
 }
 h1 + time {
-	margin-top: -24px;
+	margin-top: -25px;
 	display: block;
 	font-size: 16px;
 }
@@ -89,7 +120,7 @@ h2 {
 	font-size: 17px;
 }
 blockquote {
-	margin: 24px 50px;
+	margin: 25px 50px;
 }
 
 .aside {
@@ -126,24 +157,6 @@ sub {
 
 ul, ol {
 	padding: 0 0 0 50px;
-}
-
-pre {
-	padding: 1px 4px 0 4px;
-	margin-top: -2px;
-}
-
-code, pre.code {
-	padding: 0 2px;
-	line-height: 18px;
-	color: #456;
-}
-
-/* TODO */
-pre.code {
-	padding: 0;
-	line-height: 24px;
-	border-top: none;
 }
 
 a {
@@ -188,6 +201,6 @@ footer a.next:after {
 }
 
 footer {
-	padding-bottom: 24px;
+	padding-bottom: 25px;
 }
 
