@@ -2,7 +2,7 @@
 
 <time datetime='2013-02-03T07:04:00.000Z'></time>
 
-Efficient? <span class=num>1234</span>.
+<!-- Efficient? <span class=num>1234</span>.
 
 Testing some `code: 1 + 2 * 3 = 123.456e+03`.  That's it.
 
@@ -12,10 +12,14 @@ Testing some `code: 1 + 2 * 3 = 123.456e+03`.  That's it.
 
 Testing /some italics here/, I we might. And *how about some bold?*
 
-Destructuring assignments of JavaScript, CoffeeScript and other languages make
-it possible to declare variables as if they were part of a larger data
-structure, and then do the necessary matching to extract the required piece from
-an existing data structure.  For example:
+< -->
+
+_Destructuring assignment_
+(https://developer.mozilla.org/en-US/docs/JavaScript/New_in_JavaScript/1.7#Destructuring_assignment_(Merge_into_own_page.2Fsection))
+in JavaScript, CoffeeScript and other languages make it possible to declare
+variables as if they were part of a larger data structure, and then do the
+necessary matching to extract the required piece from an existing data
+structure.  For example:
 
 	// Sets a to 1 and b to 2
 	[a, b] = [1, 2]
