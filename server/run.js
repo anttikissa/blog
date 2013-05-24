@@ -50,6 +50,7 @@ function filter(post, type, filename) {
 	var start = new Date();
 	if (type == 'mk') {
 		result = pretext(post);
+		result = result.replace(/\n/g, ' \n');
 	} 
 
 	var end = new Date();
