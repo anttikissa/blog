@@ -31,7 +31,7 @@ This works, but has two downsides:
 So from now on, I (and my _markup language_
 (http://github.com/anttisykari/mk)) am going to write this instead:
 
-	<pre class='code'>
+	<pre class=code>
 	#include <stdio.h>
 	int main() {
 		printf("Hello world!\n");
@@ -41,7 +41,7 @@ So from now on, I (and my _markup language_
 
 This 
 
-* is not longer than the alternative (in fact, both have the same overhead),
+* is slightly shorter than the alternative,
 * is more readable when viewing the source (we can put a a newline immediately
   after `<pre>` and _it will be stripped_
   (http://developers.whatwg.org/grouping-content.html#the-pre-element), and
