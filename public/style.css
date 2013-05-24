@@ -102,7 +102,7 @@ h2, h3 {
 	font-weight: normal;
 }
 
-h1, h2, p, ul, ol, pre, footer {
+h1, h2, p, ul, ol, pre, div.links {
 	margin: 25px 0;
 }
 h1 {
@@ -177,30 +177,30 @@ a:active {
 	outline: none;
 }
 
-footer a {
+div.links a {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	max-width: 280px; /* a little less than 575 / 2 */
 }
 
-footer a.prev {
+div.links a.prev {
 	float: left;
 }
 
-footer a.prev:before {
+div.links a.prev:before {
 	content: '‹ ';
 }
 
-footer a.next {
+div.links a.next {
 	float: right;
 }
 
-footer a.next:after {
+div.links a.next:after {
 	content: ' ›';
 }
 
-footer {
+div.links {
 	padding-bottom: 25px;
 }
 

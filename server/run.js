@@ -50,11 +50,11 @@ function filter(post, type, filename) {
 	var start = new Date();
 	if (type == 'mk') {
 		result = pretext(post);
-		result = result.replace(/\n/g, ' \n');
 	} 
 
 	var end = new Date();
 	log("formatting post " + filename + " took " + (end - start) + " ms");
+	result = result.replace(/\n/g, ' \n');
 	return result;
 }
 
@@ -112,8 +112,9 @@ function listener(req, res) {
 	function serve(id) {
 		if (posts[id]) {
 			res.write(preamble.replace('$title', 'Blog - ' + posts[id].title));
+			res.write(links(id));
 			res.write(posts[id].content || 'Post not found');
-			res.end(postscript(id));
+			res.end(links(id));
 		} else {
 			res.writeHead(404);
 			res.end("Not found");
@@ -143,16 +144,16 @@ try {
 	preamble = '<!doctype html>\n<title>Blog</title>\n';
 }
 
-function postscript(id) {
+function links(id) {
 	id = Number(id);
-	var result = "<footer>";
+	var result = "<div class=links>";
 	if (id > 1)
 		result += "<a class='prev' "
 			+ "href='/" + (id - 1) + "'>" + posts[id - 1].title + "</a>";
 	if (id < Number(latestPostId))
 		result += "<a class='next' "
 			+ "href='/" + (id + 1) + "'>" + posts[id + 1].title + "</a>";
-	result += "</footer>";
+	result += "</div>";
 	return result;
 }
 
