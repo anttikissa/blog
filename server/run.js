@@ -2,8 +2,8 @@
 
 var http = require('http');
 var fs = require('fs');
-// var mk = require('../lib/mk');
 var pretext = require('pretext');
+var express = require('express');
 
 var env = process.env.BLOG_ENV == 'dev' ? 'dev' : 'prod'
 
@@ -157,10 +157,13 @@ function links(id) {
 	return result;
 }
 
-var server = http.createServer(listener);
+var app = express();
+
 var port = 3000;
-server.listen(port);
-log("Listening http://localhost:" + port + "/");
+app.listen(port);
+app.use(listener);
+
+log("Listening at http://localhost:" + port + "/");
 
 if (env == 'dev') {
 	setTimeout(function() {
