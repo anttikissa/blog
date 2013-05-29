@@ -15,15 +15,21 @@ log("Server starting, env: " + env);
 
 var filenames = fs.readdirSync(__dirname + "/../posts");
 
+var validFile = /^(\d)+(\.pre)?$/;
 var postFiles = filenames.filter(function(filename) {
-	return filename.match(/^\d+(\.txt|\.md)?$/);
+	return filename.match(validFile);
 }).map(function(filename) {
-	var match = filename.match(/^(\d+)(\.txt|\.md)?$/);
+	var match = filename.match(validFile);
+	log("Match is " + match[2]);
 	return {
 		id: match[1],
 		filename: filename,
-		type: match[2] == '.txt' ? 'mk' : match[2] == '.md' ? 'md' : 'html'
+		type: match[2] == '.pre' ? 'pre' : 'html'
 	};
+});
+
+postFiles.forEach(function(it, n) {
+	log("postFile " + n + " has id " + it.id);
 });
 
 postFiles.sort(function(a, b) { return Number(a.id) - Number(b.id); });
@@ -48,7 +54,7 @@ function filter(post, type, filename) {
 	var result = post;
 
 	var start = new Date();
-	if (type == 'mk') {
+	if (type == 'pre') {
 		result = pretext(post);
 	} 
 
@@ -77,6 +83,9 @@ function readPost(filename, type) {
 		date: date
 	}
 }
+
+var app = express();
+app.use(listener);
 
 function listener(req, res) {
 	console.log(req.url);
@@ -157,11 +166,8 @@ function links(id) {
 	return result;
 }
 
-var app = express();
-
 var port = 3000;
 app.listen(port);
-app.use(listener);
 
 log("Listening at http://localhost:" + port + "/");
 
