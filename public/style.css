@@ -20,14 +20,17 @@ b {
 	text-decoration: underline;
 }
 
+
+/* Does not work (ligatures appear in <code> as well) - skip this */
+/*
 p, time, h1, h2, h3, h4 {
 	-webkit-font-feature-settings: 'liga';
 }
 
 code {
-	/* Does not work.  Sorry everybody. */
 	-webkit-font-feature-settings: 'liga' 0;
 }
+*/
 
 time {
 	-webkit-font-feature-settings: 'onum';
