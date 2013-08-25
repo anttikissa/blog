@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export PATH=$PATH:/usr/local/bin
+
 cd $(dirname $0)
 
 while true; do
