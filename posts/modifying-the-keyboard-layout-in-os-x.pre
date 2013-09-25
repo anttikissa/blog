@@ -38,7 +38,7 @@ Mapping the keys is a bit difficult; for each key combination, you:
 * click Keyboard -> Edit Key
 * select "Ok"
 * click the key you want to remap, with modifiers (such as `Option-'`, which I'm
-  planning to map to ä)
+  planning to map to `ä`)
 * type in the output (in this case, `ä`)
 
 Once you've mapped what you need to map, save the keylayout to your home
@@ -51,5 +51,5 @@ other keyboards.
 
 If you're Finnish (or Swedish), you may find my keyboard layout useful:
 
-TODO download it here
+Download _US_with_aao.keylayout_ (/files/US_with_aao.keylayout)
 
