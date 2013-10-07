@@ -50,7 +50,7 @@ test (`{ a: ['b'], b: [] }` should be `['b', 'a']`), there wasn't a really good
 way to implement the algorithm to just solve that case -- you needed to do the
 whole thing.  Or you might have been able to cheat, but it didn't seem like a
 good idea.  Something reminds me of the good old _Sudoku solver TDD controversy_
-(http://ravimohan.blogspot.fi/2007/04/learning-from-sudoku-solvers.html).
+(http://ravimohan.blogspot.fi/2007/04/learning-from-sudoku-solvers.html).  (Especially _this post_ (http://gigamonkeys.wordpress.com/2009/10/05/coders-unit-testing/) by Peter Seibel is worth reading.)
 
 Midway to writing the code I realized that it might be useful to solve the
 traversal order for nodes starting from a given node, instead of all nodes.  So
