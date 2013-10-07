@@ -1,0 +1,68 @@
+# A simple dependency solver in JavaScript
+
+## An exercise in test-driven development, Jasmine, and graph algorithms
+
+<time datetime='2013-10-05'></time>
+
+Tags: projects, jasmine, tdd, graph-algorithms
+
+Scope: small
+
+When I woke up, for some reason I had an idea of a dependency solver in my mind.
+
+You probably know the concept by some other name.  What I mean by a dependency
+solver is an algorithm that takes a list of tasks that have other tasks as
+dependencies, and comes up with an order where the
+tasks are performed in the correct order.
+
+More generally, the problem looks like a _post-order depth-first traversal_
+(http://en.wikipedia.org/wiki/Tree_traversal#Post-order) of a graph.  Or coming
+up with an order for a _partially ordered set_
+(http://en.wikipedia.org/wiki/Partially_ordered_set).  But I didn't fully
+realize this when I started -- I just had an idea of an algorithm that would
+give me the desired result ("first solve those tasks that have no dependencies,
+and repeat this until all tasks are solved").
+
+At the same time, I wanted to also try out a new JavaScript testing framework
+(Jasmine) and solve this problem TDD style -- i.e. only write new code to fix
+broken tests.
+
+The code is in _GitHub_ (https://github.com/anttisykari/jasmine-before-breakfast).
+
+You use it by giving it a graph.  The graph is a JavaScript object whose keys
+are nodes and values are their dependencies.
+
+	var graph = { first: ['second'], second: ['third'], third: [] };
+
+Then you call `solve` on it, and it returns the correct order:
+
+	console.log(solver.solve(graph));
+
+	// -> [ 'third', 'second', 'first' ]
+
+## Takeaways:
+
+TDD doesn't seem to shine when writing algorithmic code.  (Or maybe it's just
+me.)  The first two steps, 'solve zero elements' and 'solve one elements', went
+rather easily: I just wrote a function to return an empty list, and return a
+list of nodes with no dependencies, respectively.  But when I added the third
+test (`{ a: ['b'], b: [] }` should be `['b', 'a']`), there wasn't a really good
+way to implement the algorithm to just solve that case -- you needed to do the
+whole thing.  Or you might have been able to cheat, but it didn't seem like a
+good idea.  Something reminds me of the good old _Sudoku solver TDD controversy_
+(http://ravimohan.blogspot.fi/2007/04/learning-from-sudoku-solvers.html).
+
+Midway to writing the code I realized that it might be useful to solve the
+traversal order for nodes starting from a given node, instead of all nodes.  So
+you can optionally give `solve` a starting node, and it will call `prune` to
+remove all of the nodes that are not reachable from (i.e. don't depend on) a
+given node.
+
+Finally, I decided to try to document the solution so that it would be
+relatively readable when put through _Docco_
+(http://jashkenas.github.io/docco/).  (See _docs/index.html_ (http://anttisykari.github.io/jasmine-before-breakfast/docs/) in the repo.) Studying
+_Backbone.js_ (http://backbonejs.org/) by reading the _source code_
+(http://backbonejs.org/docs/backbone.html) was an enlightening experience and I
+wanted to try out the same tool.  It's nice all right, even though I didn't
+format my ASCII art perfectly.
+
